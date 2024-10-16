@@ -1,5 +1,5 @@
 # Блок-схема текущего алгоритма
-![Блок-схема](https://gitverse.ru/eugenykondratyev/python_for_bmstu_students/content/main/dz/phase_portrait/docs/Pasted%20image%2020241010225013.png)
+![Блок-схема](https://github.com/drugsurfer/Model/blob/main/docs/Блок-схема.jpg)
 На данный момент в программе реализован следующий функционал:
 1) Считывание исходных данных из `xls` файла (`parser_data.py`);
 2) Генерация объекта (`initial_data_class.py`) управления (`ControlObject`) и объекта системы управления(`MotionControlSystem`). На этом этапе также рассчитываются возмущающие моменты (`ComputeMoments`), действующие на аппарат;
