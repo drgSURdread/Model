@@ -26,7 +26,7 @@ class PhasePlane:
             "L4": self.__switching_line_4,
         }
 
-    def __switching_line_1(self, angle_value: float) -> float:
+    def __switching_line_1(self, channel_name, angle_value: float) -> float:
         """
         Линия переключения L1
         Parameters
@@ -39,9 +39,10 @@ class PhasePlane:
         float
             Значение функции линии переключения
         """
-        return (MotionControlSystem.alpha - angle_value) / MotionControlSystem.k
+        index = MotionControlSystem.index_channel_mapping[channel_name]
+        return (MotionControlSystem.alpha[index, 0] - angle_value) / MotionControlSystem.k[index, 0]
 
-    def __switching_line_2(self, angle_value: float) -> float:
+    def __switching_line_2(self, channel_name, angle_value: float) -> float:
         """
         Линия переключения L2
         Parameters
@@ -54,11 +55,12 @@ class PhasePlane:
         float
             Значение функции линии переключения
         """
+        index = MotionControlSystem.index_channel_mapping[channel_name]
         return (
-            MotionControlSystem.alpha - MotionControlSystem.h - angle_value
-        ) / MotionControlSystem.k
+            MotionControlSystem.alpha[index, 0] - MotionControlSystem.h[index, 0] - angle_value
+        ) / MotionControlSystem.k[index, 0]
 
-    def __switching_line_3(self, angle_value: float) -> float:
+    def __switching_line_3(self, channel_name, angle_value: float) -> float:
         """
         Линия переключения L3
         Parameters
@@ -71,9 +73,10 @@ class PhasePlane:
         float
             Значение функции линии переключения
         """
-        return (-MotionControlSystem.alpha - angle_value) / MotionControlSystem.k
+        index = MotionControlSystem.index_channel_mapping[channel_name]
+        return (-MotionControlSystem.alpha[index, 0] - angle_value) / MotionControlSystem.k[index, 0]
 
-    def __switching_line_4(self, angle_value: float) -> float:
+    def __switching_line_4(self, channel_name, angle_value: float) -> float:
         """
         Линия переключения L4
         Parameters
@@ -86,11 +89,12 @@ class PhasePlane:
         float
             Значение функции линии переключения
         """
+        index = MotionControlSystem.index_channel_mapping[channel_name]
         return (
-            -MotionControlSystem.alpha + MotionControlSystem.h - angle_value
-        ) / MotionControlSystem.k
+            -MotionControlSystem.alpha[index, 0] + MotionControlSystem.h[index, 0] - angle_value
+        ) / MotionControlSystem.k[index, 0]
 
-    def get_values_on_switch_line(self, line_name: str, values):
+    def get_values_on_switch_line(self, line_name: str, values, channel):
         """
         Возвращает значение функции линии переключения
         Parameters
@@ -104,7 +108,7 @@ class PhasePlane:
         -------
         Значение функции линии переключения в градусах
         """
-        return self.lines_mapping[line_name](values * np.pi / 180) * 180 / np.pi
+        return self.lines_mapping[line_name](channel, values * np.pi / 180) * 180 / np.pi
 
     def init_start_list(self, point: tuple, channel_name: str) -> None:
         """
