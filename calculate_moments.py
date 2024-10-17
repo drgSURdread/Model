@@ -20,10 +20,9 @@ class ComputeMoments:
         # Перенесенный вектор местной вертикали ОСК в ССК np.array[float, (1, 3)]
         ort_ssk = np.dot(ControlObject.get_matrix_of_guiding_cosines(reduced=reduced), [[0], [1], [0]])
         return np.cross(
-            3 * u_velocity**2 * ort_ssk,
-            np.dot(ControlObject.tensor_inertia, (ort_ssk)),
-            axis=0,
-        )
+            (3 * u_velocity**2 * ort_ssk).T,
+            np.dot(ControlObject.tensor_inertia, (ort_ssk)).T
+        ).T
 
     @staticmethod
     def magnetic_moment(reduced: bool = False) -> np.ndarray[float]:

@@ -19,6 +19,9 @@ class NumericalSolver:
         self.gamma_f = []
         self.nu_f = []
         self.psi_f = []
+        self.M_x = []
+        self.M_y = []
+        self.M_z = []
         self.phase_plane_obj = PhasePlane()
 
     def __system_equation(
@@ -51,18 +54,16 @@ class NumericalSolver:
 
     def __get_equation_vector(self, y: list) -> np.ndarray:
         # Обращенный и простой тензор инерции
-        #I = ControlObject.get_matrix_of_guiding_cosines(reduced=self.__reduced_tensor)
         I = ControlObject.tensor_inertia
         I_inv = np.linalg.inv(I)
         # Возмущающий и управляющий моменты
         control_moment = MotionControlSystem.control_moment
         disturbing_moment = (
-            ComputeMoments.aerodynamic_moment()
-            + ComputeMoments.gravitation_moment()
-            + ComputeMoments.magnetic_moment()
+            ComputeMoments.aerodynamic_moment(True)
+            + ComputeMoments.gravitation_moment(True)
+            + ComputeMoments.magnetic_moment(True)
             + ComputeMoments.sun_moment()
         )
-        print(disturbing_moment)
         # Вектор угловой скорости
         velocity = self.__get_velocity_vector(y)
         # Итоговое матричное уравнение
@@ -107,9 +108,9 @@ class NumericalSolver:
             self.__integrate_system_equation,
             0.0,
             self.__get_initial_values(),
-            rtol=1e-7,
-            atol=1e-8,
-            max_step=0.01,
+            rtol=1e-10,
+            atol=1e-11,
+            max_step=0.001,
             t_bound=end_time,
         )
         t_start = 0.0
@@ -119,6 +120,14 @@ class NumericalSolver:
             t_start = integrator.t
             integrator.step()
             curr_t = integrator.t
+            #moment = (ComputeMoments.aerodynamic_moment(True)
+            #+ ComputeMoments.gravitation_moment(True)
+            #+ ComputeMoments.magnetic_moment(True)
+            #+ ComputeMoments.sun_moment())
+            moment = (ComputeMoments.gravitation_moment(True))
+            self.M_x.append(moment[0, 0])
+            self.M_y.append(moment[1, 0])
+            self.M_z.append(moment[2, 0])
             self.step_size_lst.append(curr_t - t_start)
             self.gamma_f.append(MotionControlSystem.last_value_F_function[0, 0])
             self.nu_f.append(MotionControlSystem.last_value_F_function[2, 0])
@@ -144,7 +153,7 @@ class NumericalSolver:
         ControlObject.set_velocity_in_channel("psi", solution[:, 4].T)
         ControlObject.set_velocity_in_channel("nu", solution[:, 5].T)
 
-    def __get_figure(self, figure_size: tuple = (10, 8)) -> plt.Axes:
+    def __get_figure(self, figure_size: tuple = (5, 5)) -> plt.Axes:
         """
         Получает фигуру для отображения графика
 
@@ -258,6 +267,39 @@ class NumericalSolver:
             self.step_size_lst,
             color="g",
         )
+
+    def plot_m_x(self) -> None:
+        ax = self.__get_figure()
+        plt.xlabel("t, c", fontsize=14, fontweight="bold")
+        plt.ylabel("M_x, Н * м", fontsize=14, fontweight="bold")
+        ax.plot(
+            ControlObject.time_points[:-1],
+            self.M_x,
+            color="g",
+        )
+        plt.title("gamma")
+
+    def plot_m_y(self) -> None:
+        ax = self.__get_figure()
+        plt.xlabel("t, c", fontsize=14, fontweight="bold")
+        plt.ylabel("M_y, Н * м", fontsize=14, fontweight="bold")
+        ax.plot(
+            ControlObject.time_points[:-1],
+            self.M_y,
+            color="g",
+        )
+        plt.title("psi")
+    
+    def plot_m_z(self) -> None:
+        ax = self.__get_figure()
+        plt.xlabel("t, c", fontsize=14, fontweight="bold")
+        plt.ylabel("M_z, Н * м", fontsize=14, fontweight="bold")
+        ax.plot(
+            ControlObject.time_points[:-1],
+            self.M_x,
+            color="g",
+        )
+        plt.title("nu")
 
     def plot_F_function_values(self) -> None:
         ax = self.__get_figure()

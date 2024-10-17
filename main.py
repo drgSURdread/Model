@@ -1,6 +1,6 @@
 import sys
 
-sys.path.append("dz/phase_portrait/src/initialization")
+sys.path.append("initialization")
 
 import initialization.initial_data_class as initial
 from numerical_solver import NumericalSolver
@@ -13,19 +13,22 @@ def start(ref_file_path: str):
 
 
 if __name__ == "__main__":
-    start("dz/phase_portrait/src/initialization/DATA_REF.xlsx")
+    start("initialization/DATA_REF.xlsx")
 
     sol = NumericalSolver()
     start_time = time.time()
-    sol.new_solve(end_time=0.1, step=0.01)
+    sol.new_solve(end_time=40, step=0.01)
     # 5 секунд симуляции это примерно минута выполнения
     # на new_solve 5 секунд симуляции это 19 секунд выполнения
     print("Время выполнения", time.time() - start_time)
 
 
-    #sol.plot_phase_portrait("nu")
-    #sol.plot_phase_portrait("gamma")
-    #sol.plot_phase_portrait("psi")
+    sol.plot_phase_portrait("nu")
+    sol.plot_phase_portrait("gamma")
+    sol.plot_phase_portrait("psi")
     #sol.plot_step_diagram()
-    #sol.plot_F_function_values()
-    #sol.plot_show()
+    sol.plot_F_function_values()
+    sol.plot_m_x()
+    sol.plot_m_y()
+    sol.plot_m_z()
+    sol.plot_show()
