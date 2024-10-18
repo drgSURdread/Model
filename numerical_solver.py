@@ -8,26 +8,31 @@ import matplotlib.pyplot as plt
 from phase_plane import PhasePlane
 from calculate_moments import ComputeMoments
 
-# FIXME: Надо думать что делать с решателем. На листах F+, F-, когда
-# система ДУ жесткая, то odeint() не справляется, ругается на высокие значения
-# производных. Приходится уменьшать шаг
+# TODO: Улучшить шаги решателя
+# Сейчас долго решает. Надо увеличивать шаг на G0
+
+# TODO: Улучшить код визуализации
 
 class NumericalSolver:
     def __init__(self, reduced: bool = False) -> None:
-        self.__reduced_tensor = reduced
+        self.__reduced_cosine_matrix = reduced
+
+        # Отладочная информация
         self.step_size_lst = []
-        self.gamma_f = []
-        self.nu_f = []
-        self.psi_f = []
-        self.M_x = []
-        self.M_y = []
-        self.M_z = []
+
+        self.gamma_relay_values = []
+        self.nu_relay_values = []
+        self.psi_relay_values = []
+        
+        self.disturbing_moment_gamma = []
+        self.disturbing_moment_psi = []
+        self.disturbing_moment_nu = []
         self.phase_plane_obj = PhasePlane()
 
     def __system_equation(
         self, y: list, t: float
-    ) -> list:  # y = [gamma, psi, nu, gamma_dot, psi_dot, nu_dot]
-        # Система Коши
+    ) -> list:
+        # Система Коши | y = [gamma, psi, nu, gamma_dot, psi_dot, nu_dot]
         d_gamma_dt = y[3]
         d_psi_dt = y[4]
         d_nu_dt = y[5]
@@ -49,23 +54,22 @@ class NumericalSolver:
     ) -> list:
         return self.__system_equation(y, t)
 
-    def __get_velocity_vector(self, y):
+    def __get_velocity_vector(self, y) -> np.ndarray:
         return np.array([[y[3]], [y[4]], [y[5]]])
 
     def __get_equation_vector(self, y: list) -> np.ndarray:
         # Обращенный и простой тензор инерции
         I = ControlObject.tensor_inertia
         I_inv = np.linalg.inv(I)
+
         # Возмущающий и управляющий моменты
         control_moment = MotionControlSystem.control_moment
-        disturbing_moment = (
-            ComputeMoments.aerodynamic_moment(True)
-            + ComputeMoments.gravitation_moment(True)
-            + ComputeMoments.magnetic_moment(True)
-            + ComputeMoments.sun_moment()
-        )
+
+        disturbing_moment = self.__calculate_moments()
+
         # Вектор угловой скорости
         velocity = self.__get_velocity_vector(y)
+
         # Итоговое матричное уравнение
         return I_inv.dot(
             disturbing_moment
@@ -82,7 +86,7 @@ class NumericalSolver:
         psi_dot = ControlObject.get_velocity_value_in_channel("psi")
         return gamma, psi, nu, gamma_dot, psi_dot, nu_dot
 
-    def __get_f_function_value(self, y: list) -> np.ndarray:#y = [gamma, psi, nu, gamma_dot, psi_dot, nu_dot]
+    def __get_f_function_value(self, y: list) -> np.ndarray:
         # TODO: добавить выбор нелинейной функции сигнала
         signal_nu = MotionControlSystem.linear_signal_function("nu", y[2], y[5])
         signal_gamma = MotionControlSystem.linear_signal_function("gamma", y[0], y[3])
@@ -93,55 +97,73 @@ class NumericalSolver:
             [MotionControlSystem.f_function("nu", signal_nu)],
         ])
 
-    def solve(self, end_time, step):
-        # TODO: пока постоянный шаг. надо что-нибудь придумать по переменному шагу
-        # это должно все ускорить
+    def solve(self, end_time, step) -> None:
+        # Версия решателя с постоянным шагом
         t_lst = np.linspace(0, end_time, int(end_time / step))
         sol = odeint(self.__system_equation, self.__get_initial_values(), t_lst)
         self.__set_angles_value(sol)
         self.__set_velocity_value(sol)
 
-    def new_solve(self, end_time, step):
-        # y = [gamma, psi, nu, gamma_dot, psi_dot, nu_dot]
-        # В решении есть шум, нужно фильтровать шагом
+    def new_solve(self, end_time: float, max_step: float = 0.001,
+                  rtol: float = 1e-9, atol: float = 1e-11):
+        # Решатель с переменным шагом
         integrator = integrate.RK45(
             self.__integrate_system_equation,
             0.0,
             self.__get_initial_values(),
-            rtol=1e-10,
-            atol=1e-11,
-            max_step=0.001,
+            rtol=rtol,
+            atol=atol,
+            max_step=max_step,
             t_bound=end_time,
         )
+
         t_start = 0.0
+        # TODO: для смены шага можно использовать:
+        #if np.all(MotionControlSystem.last_value_F_function == 0):
+        #    integrator.h_abs = 0.001
         while not(integrator.status == 'finished'):
-            #if np.all(MotionControlSystem.last_value_F_function == 0):
-            #    integrator.h_abs = 0.001
             t_start = integrator.t
             integrator.step()
             curr_t = integrator.t
-            #moment = (ComputeMoments.aerodynamic_moment(True)
-            #+ ComputeMoments.gravitation_moment(True)
-            #+ ComputeMoments.magnetic_moment(True)
-            #+ ComputeMoments.sun_moment())
-            moment = (ComputeMoments.gravitation_moment(True))
-            self.M_x.append(moment[0, 0])
-            self.M_y.append(moment[1, 0])
-            self.M_z.append(moment[2, 0])
-            self.step_size_lst.append(curr_t - t_start)
-            self.gamma_f.append(MotionControlSystem.last_value_F_function[0, 0])
-            self.nu_f.append(MotionControlSystem.last_value_F_function[2, 0])
-            self.psi_f.append(MotionControlSystem.last_value_F_function[1, 0])
-            #print(curr_t - t_start)
-            ControlObject.set_angles_in_channel("gamma", integrator.y[0])
-            ControlObject.set_angles_in_channel("psi", integrator.y[1])
-            ControlObject.set_angles_in_channel("nu", integrator.y[2])
-            ControlObject.set_velocity_in_channel("gamma", integrator.y[3])
-            ControlObject.set_velocity_in_channel("psi", integrator.y[4])
-            ControlObject.set_velocity_in_channel("nu", integrator.y[5])
-            ControlObject.time_points = np.append(ControlObject.time_points, integrator.t)
-            #print(ControlObject.gamma_angles[-1])
 
+            # Сохранение отладочной информации
+            self.__save_moment_values(
+                self.__calculate_moments()
+            )
+            self.__save_step_size(curr_t - t_start)
+            self.__save_relay_function_values()
+            self.__save_step_solution(integrator.y)
+
+            ControlObject.time_points = np.append(ControlObject.time_points, integrator.t)
+
+    def __save_relay_function_values(self) -> None:
+        self.gamma_relay_values.append(MotionControlSystem.last_value_F_function[0, 0])
+        self.nu_relay_values.append(MotionControlSystem.last_value_F_function[2, 0])
+        self.psi_relay_values.append(MotionControlSystem.last_value_F_function[1, 0])
+    
+    def __save_step_size(self, step: float) -> None:
+        self.step_size_lst.append(step)
+    
+    def __calculate_moments(self) -> np.ndarray:
+        return (
+            ComputeMoments.aerodynamic_moment(self.__reduced_cosine_matrix)
+            + ComputeMoments.gravitation_moment(self.__reduced_cosine_matrix)
+            + ComputeMoments.magnetic_moment(self.__reduced_cosine_matrix)
+            + ComputeMoments.sun_moment()
+        )
+    
+    def __save_moment_values(self, moment: np.ndarray) -> None:
+        self.disturbing_moment_gamma.append(moment[0, 0])
+        self.disturbing_moment_psi.append(moment[1, 0])
+        self.disturbing_moment_nu.append(moment[2, 0])
+        
+    def __save_step_solution(self, solution: list) -> None:
+        ControlObject.set_angles_in_channel("gamma", solution.y[0])
+        ControlObject.set_angles_in_channel("psi", solution.y[1])
+        ControlObject.set_angles_in_channel("nu", solution.y[2])
+        ControlObject.set_velocity_in_channel("gamma", solution.y[3])
+        ControlObject.set_velocity_in_channel("psi", solution.y[4])
+        ControlObject.set_velocity_in_channel("nu", solution.y[5])
 
     def __set_angles_value(self, solution: np.ndarray):
         ControlObject.set_angles_in_channel("gamma", solution[:, 0].T)
@@ -268,41 +290,61 @@ class NumericalSolver:
             color="g",
         )
 
-    def plot_m_x(self) -> None:
+    def plot_disturbing_moment_gamma(self, angles: bool = False) -> None:
         ax = self.__get_figure()
         plt.xlabel("t, c", fontsize=14, fontweight="bold")
-        plt.ylabel("M_x, Н * м", fontsize=14, fontweight="bold")
+        plt.ylabel("M_gamma, Н * м", fontsize=14, fontweight="bold")
+        if angles:
+            x_values = ControlObject.gamma_angles[:-1]
+            x_label = "gamma, рад."
+        else:
+            x_values= ControlObject.time_points[:-1]
+            x_label = "t, c"
+        plt.xlabel(x_label, fontsize=14, fontweight="bold")
         ax.plot(
-            #ControlObject.gamma_angles[:-1],
-            ControlObject.time_points[:-1],
-            self.M_x,
+            x_values,
+            self.disturbing_moment_gamma,
             color="g",
         )
-        plt.title("gamma")
+        plt.title("Сумм. возм. момент в крене")
 
-    def plot_m_y(self) -> None:
+    def plot_disturbing_moment_psi(self, angles: bool = False) -> None:
         ax = self.__get_figure()
         plt.xlabel("t, c", fontsize=14, fontweight="bold")
-        plt.ylabel("M_y, Н * м", fontsize=14, fontweight="bold")
+        plt.ylabel("M_psi, Н * м", fontsize=14, fontweight="bold")
+        if angles:
+            x_values = ControlObject.psi_angles[:-1]
+            x_label = "psi, рад."
+        else:
+            x_values= ControlObject.time_points[:-1]
+            x_label = "t, c"
+        plt.xlabel(x_label, fontsize=14, fontweight="bold")
         ax.plot(
-            ControlObject.psi_angles[:-1],
-            self.M_y,
+            x_values,
+            self.disturbing_moment_psi,
             color="g",
         )
-        plt.title("psi")
+        plt.title("Сумм. возм. момент в курсе")
     
-    def plot_m_z(self) -> None:
+    def plot_disturbing_moment_nu(self, angles: bool = False) -> None:
         ax = self.__get_figure()
         plt.xlabel("t, c", fontsize=14, fontweight="bold")
-        plt.ylabel("M_z, Н * м", fontsize=14, fontweight="bold")
+        plt.ylabel("M_nu, Н * м", fontsize=14, fontweight="bold")
+        if angles:
+            x_values = ControlObject.nu_angles[:-1]
+            x_label = "nu, рад."
+        else:
+            x_values= ControlObject.time_points[:-1]
+            x_label = "t, c"
+        plt.xlabel(x_label, fontsize=14, fontweight="bold")
         ax.plot(
-            ControlObject.nu_angles[:-1],
-            self.M_z,
+            x_values,
+            self.disturbing_moment_nu,
             color="g",
         )
-        plt.title("nu")
+        plt.title("Сумм. возм. момент в тангаже")
 
-    def plot_osc_x(self) -> None:
+    def plot_oscillogram_gamma(self) -> None:
         ax = self.__get_figure()
         plt.xlabel("t, c", fontsize=14, fontweight="bold")
         plt.ylabel("gamma, рад", fontsize=14, fontweight="bold")
@@ -311,9 +353,9 @@ class NumericalSolver:
             ControlObject.gamma_angles,
             color="g",
         )
-        plt.title("gamma_osc")
-    
-    def plot_osc_y(self) -> None:
+        plt.title("Осцилл. в крене")
+
+    def plot_oscillogram_psi(self) -> None:
         ax = self.__get_figure()
         plt.xlabel("t, c", fontsize=14, fontweight="bold")
         plt.ylabel("psi, рад", fontsize=14, fontweight="bold")
@@ -322,18 +364,18 @@ class NumericalSolver:
             ControlObject.psi_angles,
             color="g",
         )
-        plt.title("psi_osc")
-    
-    def plot_osc_z(self) -> None:
+        plt.title("Осцилл. в курсе")
+
+    def plot_oscillogram_nu(self) -> None:
         ax = self.__get_figure()
         plt.xlabel("t, c", fontsize=14, fontweight="bold")
-        plt.ylabel("nu, рад", fontsize=14, fontweight="bold")
+        plt.ylabel("psi, рад", fontsize=14, fontweight="bold")
         ax.plot(
             ControlObject.time_points,
             ControlObject.nu_angles,
             color="g",
         )
-        plt.title("nu_osc")
+        plt.title("Осцилл. в тангаже")     
 
     def plot_F_function_values(self) -> None:
         ax = self.__get_figure()
@@ -341,19 +383,19 @@ class NumericalSolver:
         plt.ylabel("F", fontsize=14, fontweight="bold")
         ax.plot(
             ControlObject.time_points[:-1],
-            self.gamma_f,
+            self.gamma_relay_values,
             color="g",
             label="F_gamma"
         )
         ax.plot(
             ControlObject.time_points[:-1],
-            self.psi_f,
+            self.psi_relay_values,
             color="b",
             label="F_psi"
         )
         ax.plot(
             ControlObject.time_points[:-1],
-            self.nu_f,
+            self.nu_relay_values,
             color="r",
             label="F_nu"
         )
