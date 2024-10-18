@@ -33,15 +33,19 @@ if __name__ == "__main__":
 
     
     sol = solution()
-    #sol.plot_phase_portrait("nu")
+    sol.plot_phase_portrait("nu")
     sol.plot_phase_portrait("gamma")
-    #sol.plot_phase_portrait("psi")
+    sol.plot_phase_portrait("psi")
     #sol.plot_step_diagram()
     #sol.plot_F_function_values()
     sol.plot_m_x()
     #sol.plot_m_y()
     #sol.plot_m_z()
+    sol.plot_osc_x()
+    sol.plot_osc_y()
+    sol.plot_osc_z()
 
+    """
     moments = []
     angles = ControlObject.gamma_angles
     for angle in angles:
@@ -60,6 +64,7 @@ if __name__ == "__main__":
         color="g",
     )
     plt.title("gamma")
+    """
 
     sol.plot_show()
     

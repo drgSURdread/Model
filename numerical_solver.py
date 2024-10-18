@@ -273,7 +273,8 @@ class NumericalSolver:
         plt.xlabel("t, c", fontsize=14, fontweight="bold")
         plt.ylabel("M_x, Н * м", fontsize=14, fontweight="bold")
         ax.plot(
-            ControlObject.gamma_angles[:-1],
+            #ControlObject.gamma_angles[:-1],
+            ControlObject.time_points[:-1],
             self.M_x,
             color="g",
         )
@@ -300,6 +301,39 @@ class NumericalSolver:
             color="g",
         )
         plt.title("nu")
+
+    def plot_osc_x(self) -> None:
+        ax = self.__get_figure()
+        plt.xlabel("t, c", fontsize=14, fontweight="bold")
+        plt.ylabel("gamma, рад", fontsize=14, fontweight="bold")
+        ax.plot(
+            ControlObject.time_points,
+            ControlObject.gamma_angles,
+            color="g",
+        )
+        plt.title("gamma_osc")
+    
+    def plot_osc_y(self) -> None:
+        ax = self.__get_figure()
+        plt.xlabel("t, c", fontsize=14, fontweight="bold")
+        plt.ylabel("psi, рад", fontsize=14, fontweight="bold")
+        ax.plot(
+            ControlObject.time_points,
+            ControlObject.psi_angles,
+            color="g",
+        )
+        plt.title("psi_osc")
+    
+    def plot_osc_z(self) -> None:
+        ax = self.__get_figure()
+        plt.xlabel("t, c", fontsize=14, fontweight="bold")
+        plt.ylabel("nu, рад", fontsize=14, fontweight="bold")
+        ax.plot(
+            ControlObject.time_points,
+            ControlObject.nu_angles,
+            color="g",
+        )
+        plt.title("nu_osc")
 
     def plot_F_function_values(self) -> None:
         ax = self.__get_figure()
