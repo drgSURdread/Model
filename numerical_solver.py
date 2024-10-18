@@ -273,7 +273,7 @@ class NumericalSolver:
         plt.xlabel("t, c", fontsize=14, fontweight="bold")
         plt.ylabel("M_x, Н * м", fontsize=14, fontweight="bold")
         ax.plot(
-            ControlObject.time_points[:-1],
+            ControlObject.gamma_angles[:-1],
             self.M_x,
             color="g",
         )
@@ -284,7 +284,7 @@ class NumericalSolver:
         plt.xlabel("t, c", fontsize=14, fontweight="bold")
         plt.ylabel("M_y, Н * м", fontsize=14, fontweight="bold")
         ax.plot(
-            ControlObject.time_points[:-1],
+            ControlObject.psi_angles[:-1],
             self.M_y,
             color="g",
         )
@@ -295,8 +295,8 @@ class NumericalSolver:
         plt.xlabel("t, c", fontsize=14, fontweight="bold")
         plt.ylabel("M_z, Н * м", fontsize=14, fontweight="bold")
         ax.plot(
-            ControlObject.time_points[:-1],
-            self.M_x,
+            ControlObject.nu_angles[:-1],
+            self.M_z,
             color="g",
         )
         plt.title("nu")
