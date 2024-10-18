@@ -158,12 +158,12 @@ class NumericalSolver:
         self.disturbing_moment_nu.append(moment[2, 0])
         
     def __save_step_solution(self, solution: list) -> None:
-        ControlObject.set_angles_in_channel("gamma", solution.y[0])
-        ControlObject.set_angles_in_channel("psi", solution.y[1])
-        ControlObject.set_angles_in_channel("nu", solution.y[2])
-        ControlObject.set_velocity_in_channel("gamma", solution.y[3])
-        ControlObject.set_velocity_in_channel("psi", solution.y[4])
-        ControlObject.set_velocity_in_channel("nu", solution.y[5])
+        ControlObject.set_angles_in_channel("gamma", solution[0])
+        ControlObject.set_angles_in_channel("psi", solution[1])
+        ControlObject.set_angles_in_channel("nu", solution[2])
+        ControlObject.set_velocity_in_channel("gamma", solution[3])
+        ControlObject.set_velocity_in_channel("psi", solution[4])
+        ControlObject.set_velocity_in_channel("nu", solution[5])
 
     def __set_angles_value(self, solution: np.ndarray):
         ControlObject.set_angles_in_channel("gamma", solution[:, 0].T)

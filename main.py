@@ -20,51 +20,43 @@ def get_moments(channel_name: str):
     return disturbing_moment[index_channel, 0]
 
 def solution():
-    sol = NumericalSolver()
+    sol = NumericalSolver(reduced=True)
     start_time = time.time()
-    sol.new_solve(end_time=20, step=0.01)
+    sol.new_solve(end_time=20)
     # 5 секунд симуляции это примерно минута выполнения
     # на new_solve 5 секунд симуляции это 19 секунд выполнения
     print("Время выполнения", time.time() - start_time)
     return sol
 
+# HELP: В процессе моделирования движения с перекрестными связями
+# на фазовых портретах наблюдаются изломы. Есть идеи, что это из-за
+# срабатывания реле в других каналах. Впринципе это прдтверждается 
+# графиками
+# HELP: Решения с редуцированной и простой матрицей направляющих
+# косинусов дают одинаковые результаты. А разница во времени решения
+# около 20 сек.
 if __name__ == "__main__":
     start("initialization/DATA_REF.xlsx")
 
-    
     sol = solution()
+
     sol.plot_phase_portrait("nu")
     sol.plot_phase_portrait("gamma")
     sol.plot_phase_portrait("psi")
-    #sol.plot_step_diagram()
-    #sol.plot_F_function_values()
-    sol.plot_m_x()
-    #sol.plot_m_y()
-    #sol.plot_m_z()
-    sol.plot_osc_x()
-    sol.plot_osc_y()
-    sol.plot_osc_z()
 
-    """
-    moments = []
-    angles = ControlObject.gamma_angles
-    for angle in angles:
-        ControlObject.set_angles_in_channel("gamma", angle)
-        moments.append(get_moments("gamma"))
-    fig, ax = plt.subplots(figsize=(10, 10), layout="tight")
-    ax.grid(which="major", color="#DDDDDD", linewidth=1.5)
-    ax.grid(which="minor", color="#EEEEEE", linestyle=":", linewidth=1)
-    ax.minorticks_on()
-    ax.grid(True)
-    plt.xlabel("t, c", fontsize=14, fontweight="bold")
-    plt.ylabel("M_x, Н * м", fontsize=14, fontweight="bold")
-    ax.plot(
-        angles,
-        moments,
-        color="g",
-    )
-    plt.title("gamma")
-    """
+    sol.plot_F_function_values()
+
+    sol.plot_disturbing_moment_gamma()
+    sol.plot_disturbing_moment_nu()
+    sol.plot_disturbing_moment_psi()
+
+    sol.plot_disturbing_moment_gamma(angles=True)
+    sol.plot_disturbing_moment_nu(angles=True)
+    sol.plot_disturbing_moment_psi(angles=True)
+
+    sol.plot_oscillogram_gamma()
+    sol.plot_oscillogram_psi()
+    sol.plot_oscillogram_nu()
 
     sol.plot_show()
     
