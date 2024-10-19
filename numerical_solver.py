@@ -104,8 +104,8 @@ class NumericalSolver:
         self.__set_angles_value(sol)
         self.__set_velocity_value(sol)
 
-    def new_solve(self, end_time: float, max_step: float = 0.001,
-                  rtol: float = 1e-9, atol: float = 1e-11):
+    def new_solve(self, end_time: float, max_step: float = 0.005,
+                  rtol: float = 1e-9, atol: float = 1e-10):
         # Решатель с переменным шагом
         integrator = integrate.RK45(
             self.__integrate_system_equation,
@@ -118,10 +118,11 @@ class NumericalSolver:
         )
 
         t_start = 0.0
-        # TODO: для смены шага можно использовать:
-        #if np.all(MotionControlSystem.last_value_F_function == 0):
-        #    integrator.h_abs = 0.001
+        # HELP: на max_step == 0.01 и h_abs == 0.01 время работы 10 сек
+        # при симуляции в 50 сек.
         while not(integrator.status == 'finished'):
+            #if np.all(MotionControlSystem.last_value_F_function == 0):
+            #    integrator.h_abs = 0.008
             t_start = integrator.t
             integrator.step()
             curr_t = integrator.t

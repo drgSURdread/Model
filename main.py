@@ -22,9 +22,7 @@ def get_moments(channel_name: str):
 def solution():
     sol = NumericalSolver(reduced=True)
     start_time = time.time()
-    sol.new_solve(end_time=20)
-    # 5 секунд симуляции это примерно минута выполнения
-    # на new_solve 5 секунд симуляции это 19 секунд выполнения
+    sol.new_solve(end_time=600)
     print("Время выполнения", time.time() - start_time)
     return sol
 
@@ -35,6 +33,10 @@ def solution():
 # HELP: Решения с редуцированной и простой матрицей направляющих
 # косинусов дают одинаковые результаты. А разница во времени решения
 # около 20 сек.
+
+# HELP: С текущими настройками решателя наблюдается хорошая точность
+# около линий перключения. Текущая скорость симуляции - 
+# 100 сек. симуляции == 40 сек. решения
 if __name__ == "__main__":
     start("initialization/DATA_REF.xlsx")
 
@@ -45,6 +47,7 @@ if __name__ == "__main__":
     sol.plot_phase_portrait("psi")
 
     sol.plot_F_function_values()
+    sol.plot_step_diagram()
 
     sol.plot_disturbing_moment_gamma()
     sol.plot_disturbing_moment_nu()
