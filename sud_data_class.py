@@ -154,7 +154,17 @@ class MotionControlSystem:
         return MotionControlSystem.a[
             MotionControlSystem.index_channel_mapping[channel_name], 0
         ]
-
+    
+    @staticmethod
+    def check_signal_value(channel_name: str, signal_value:float) -> int:
+        index_channel = MotionControlSystem.index_channel_mapping[channel_name]
+        epsilon = MotionControlSystem.h[index_channel, 0] / 6
+        if MotionControlSystem.alpha[index_channel, 0] - MotionControlSystem.h[index_channel, 0] - epsilon < signal_value < MotionControlSystem.alpha[index_channel, 0] + epsilon:
+            return True
+        elif -MotionControlSystem.alpha[index_channel, 0] + epsilon < signal_value < -MotionControlSystem.alpha[index_channel, 0] + MotionControlSystem.h[index_channel, 0] - epsilon:
+            return True
+        return False
+    
     @staticmethod
     def f_function(channel_name: str, signal_value: float) -> int:
         """
@@ -174,10 +184,10 @@ class MotionControlSystem:
             Значение сигнала управления
         """
         index_channel = MotionControlSystem.index_channel_mapping[channel_name]
-        #if signal_value > MotionControlSystem.alpha[index_channel, 0]:
-        #    MotionControlSystem.last_value_F_function[index_channel, 0] = 1
-        #elif signal_value < -MotionControlSystem.alpha[index_channel, 0]:
-        #    MotionControlSystem.last_value_F_function[index_channel, 0] = -1
+        if signal_value > MotionControlSystem.alpha[index_channel, 0]:
+            MotionControlSystem.last_value_F_function[index_channel, 0] = 1
+        elif signal_value < -MotionControlSystem.alpha[index_channel, 0]:
+            MotionControlSystem.last_value_F_function[index_channel, 0] = -1
         F = 0.5 * (
             np.sign(
                 signal_value

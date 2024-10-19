@@ -65,7 +65,7 @@ class NumericalSolver:
         # Возмущающий и управляющий моменты
         control_moment = MotionControlSystem.control_moment
 
-        disturbing_moment = self.__calculate_moments()
+        disturbing_moment = -self.__calculate_moments()
 
         # Вектор угловой скорости
         velocity = self.__get_velocity_vector(y)
@@ -104,8 +104,8 @@ class NumericalSolver:
         self.__set_angles_value(sol)
         self.__set_velocity_value(sol)
 
-    def new_solve(self, end_time: float, max_step: float = 0.005,
-                  rtol: float = 1e-9, atol: float = 1e-10):
+    def new_solve(self, end_time: float, max_step: float = 0.01,
+                  rtol: float = 1e-11, atol: float = 1e-12):
         # Решатель с переменным шагом
         integrator = integrate.RK45(
             self.__integrate_system_equation,
@@ -121,8 +121,8 @@ class NumericalSolver:
         # HELP: на max_step == 0.01 и h_abs == 0.01 время работы 10 сек
         # при симуляции в 50 сек.
         while not(integrator.status == 'finished'):
-            #if np.all(MotionControlSystem.last_value_F_function == 0):
-            #    integrator.h_abs = 0.008
+            if self.__check_signal_value():
+                integrator.h_abs = 0.001
             t_start = integrator.t
             integrator.step()
             curr_t = integrator.t
@@ -136,6 +136,29 @@ class NumericalSolver:
             self.__save_step_solution(integrator.y)
 
             ControlObject.time_points = np.append(ControlObject.time_points, integrator.t)
+
+    def __check_signal_value(self):
+        signal_nu = MotionControlSystem.linear_signal_function(
+            "nu",
+            ControlObject.nu_angles[-1],
+            ControlObject.nu_w[-1]
+        )
+        signal_gamma = MotionControlSystem.linear_signal_function(
+            "gamma", 
+            ControlObject.gamma_angles[-1],
+            ControlObject.gamma_w[-1]
+        )
+        signal_psi = MotionControlSystem.linear_signal_function(
+            "psi",
+            ControlObject.psi_angles[-1],
+            ControlObject.psi_w[-1]
+        )
+        flag_gamma = MotionControlSystem.check_signal_value("gamma", signal_gamma)
+        flag_psi = MotionControlSystem.check_signal_value("psi", signal_psi)
+        flag_nu = MotionControlSystem.check_signal_value("nu", signal_nu)
+        if flag_gamma or flag_psi or flag_nu:
+            return True
+        return False
 
     def __save_relay_function_values(self) -> None:
         self.gamma_relay_values.append(MotionControlSystem.last_value_F_function[0, 0])
