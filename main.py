@@ -22,7 +22,7 @@ def get_moments(channel_name: str):
 def solution():
     sol = NumericalSolver(reduced=True)
     start_time = time.time()
-    sol.new_solve(end_time=600)
+    sol.new_solve(end_time=100)
     print("Время выполнения", time.time() - start_time)
     return sol
 
@@ -45,18 +45,16 @@ if __name__ == "__main__":
     sol.plot_phase_portrait("nu")
     sol.plot_phase_portrait("gamma")
     sol.plot_phase_portrait("psi")
-
     sol.plot_F_function_values()
     sol.plot_step_diagram()
+    sol.plot_time_save_diagram()
 
     sol.plot_disturbing_moment_gamma()
     sol.plot_disturbing_moment_nu()
     sol.plot_disturbing_moment_psi()
-
     sol.plot_disturbing_moment_gamma(angles=True)
     sol.plot_disturbing_moment_nu(angles=True)
     sol.plot_disturbing_moment_psi(angles=True)
-
     sol.plot_oscillogram_gamma()
     sol.plot_oscillogram_psi()
     sol.plot_oscillogram_nu()

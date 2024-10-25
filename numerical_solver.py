@@ -6,6 +6,7 @@ from numba import njit # TODO: для ускорения, пока без нее
 from sud_data_class import MotionControlSystem
 import matplotlib.pyplot as plt
 from phase_plane import PhasePlane
+import time
 from calculate_moments import ComputeMoments
 
 # TODO: Улучшить шаги решателя
@@ -19,6 +20,7 @@ class NumericalSolver:
 
         # Отладочная информация
         self.step_size_lst = []
+        self.time_save = []
 
         self.gamma_relay_values = []
         self.nu_relay_values = []
@@ -65,7 +67,7 @@ class NumericalSolver:
         # Возмущающий и управляющий моменты
         control_moment = MotionControlSystem.control_moment
 
-        disturbing_moment = self.__calculate_moments()
+        disturbing_moment = -self.__calculate_moments()
 
         # Вектор угловой скорости
         velocity = self.__get_velocity_vector(y)
@@ -104,7 +106,7 @@ class NumericalSolver:
         self.__set_angles_value(sol)
         self.__set_velocity_value(sol)
 
-    def new_solve(self, end_time: float, max_step: float = 0.005,
+    def new_solve(self, end_time: float, max_step: float = 0.3,
                   rtol: float = 1e-9, atol: float = 1e-10):
         # Решатель с переменным шагом
         integrator = integrate.RK45(
@@ -121,8 +123,8 @@ class NumericalSolver:
         # HELP: на max_step == 0.01 и h_abs == 0.01 время работы 10 сек
         # при симуляции в 50 сек.
         while not(integrator.status == 'finished'):
-            #if np.all(MotionControlSystem.last_value_F_function == 0):
-            #    integrator.h_abs = 0.008
+            if self.__check_signal_value():
+                integrator.h_abs = 0.001
             t_start = integrator.t
             integrator.step()
             curr_t = integrator.t
@@ -136,6 +138,29 @@ class NumericalSolver:
             self.__save_step_solution(integrator.y)
 
             ControlObject.time_points = np.append(ControlObject.time_points, integrator.t)
+
+    def __check_signal_value(self):
+        signal_nu = MotionControlSystem.linear_signal_function(
+            "nu",
+            ControlObject.nu_angles[-1],
+            ControlObject.nu_w[-1]
+        )
+        signal_gamma = MotionControlSystem.linear_signal_function(
+            "gamma", 
+            ControlObject.gamma_angles[-1],
+            ControlObject.gamma_w[-1]
+        )
+        signal_psi = MotionControlSystem.linear_signal_function(
+            "psi",
+            ControlObject.psi_angles[-1],
+            ControlObject.psi_w[-1]
+        )
+        flag_gamma = MotionControlSystem.check_signal_value("gamma", signal_gamma)
+        flag_psi = MotionControlSystem.check_signal_value("psi", signal_psi)
+        flag_nu = MotionControlSystem.check_signal_value("nu", signal_nu)
+        if flag_gamma or flag_psi or flag_nu:
+            return True
+        return False
 
     def __save_relay_function_values(self) -> None:
         self.gamma_relay_values.append(MotionControlSystem.last_value_F_function[0, 0])
@@ -159,12 +184,14 @@ class NumericalSolver:
         self.disturbing_moment_nu.append(moment[2, 0])
         
     def __save_step_solution(self, solution: list) -> None:
+        last_t = time.time()
         ControlObject.set_angles_in_channel("gamma", solution[0])
         ControlObject.set_angles_in_channel("psi", solution[1])
         ControlObject.set_angles_in_channel("nu", solution[2])
         ControlObject.set_velocity_in_channel("gamma", solution[3])
         ControlObject.set_velocity_in_channel("psi", solution[4])
         ControlObject.set_velocity_in_channel("nu", solution[5])
+        self.time_save.append(time.time() - last_t)
 
     def __set_angles_value(self, solution: np.ndarray):
         ControlObject.set_angles_in_channel("gamma", solution[:, 0].T)
@@ -288,6 +315,16 @@ class NumericalSolver:
         ax.plot(
             ControlObject.time_points[:-1],
             self.step_size_lst,
+            color="g",
+        )
+
+    def plot_time_save_diagram(self) -> None:
+        ax = self.__get_figure()
+        plt.xlabel("t, c", fontsize=14, fontweight="bold")
+        plt.ylabel("time_save, c", fontsize=14, fontweight="bold")
+        ax.plot(
+            ControlObject.time_points[:-1],
+            self.time_save,
             color="g",
         )
 
