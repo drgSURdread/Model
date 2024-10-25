@@ -158,7 +158,7 @@ class MotionControlSystem:
     @staticmethod
     def check_signal_value(channel_name: str, signal_value:float) -> int:
         index_channel = MotionControlSystem.index_channel_mapping[channel_name]
-        epsilon = MotionControlSystem.h[index_channel, 0] / 6
+        epsilon = MotionControlSystem.h[index_channel, 0] / 10
         if MotionControlSystem.alpha[index_channel, 0] - MotionControlSystem.h[index_channel, 0] - epsilon < signal_value < MotionControlSystem.alpha[index_channel, 0] + epsilon:
             return True
         elif -MotionControlSystem.alpha[index_channel, 0] + epsilon < signal_value < -MotionControlSystem.alpha[index_channel, 0] + MotionControlSystem.h[index_channel, 0] - epsilon:
