@@ -123,9 +123,9 @@ class PhasePlane:
         """
         self.channel_name = channel_name
 
-        if point[1] > self.__switching_line_1(point[0]):
+        if point[1] > self.__switching_line_1(channel_name, point[0]):
             self.current_curve = "G+"
-        elif point[1] < self.__switching_line_3(point[0]):
+        elif point[1] < self.__switching_line_3(channel_name, point[0]):
             self.current_curve = "G-"
         else:
             self.current_curve = "G0"
@@ -144,23 +144,23 @@ class PhasePlane:
             Флаг пересечения
         """
         if self.current_curve == "G+":
-            projection_point = self.lines_mapping["L2"](curr_point[0])
+            projection_point = self.lines_mapping["L2"](self.channel_name, curr_point[0])
             if projection_point < curr_point[1]:
                 return False, "L2"
             return True, "L2"
         elif self.current_curve == "G-":
-            projection_point = self.lines_mapping["L4"](curr_point[0])
+            projection_point = self.lines_mapping["L4"](self.channel_name, curr_point[0])
             if projection_point > curr_point[1]:
                 return False, "L4"
             return True, "L4"
         else:
             if curr_point[0] > 0:
-                projection_point = self.lines_mapping["L1"](curr_point[0])
+                projection_point = self.lines_mapping["L1"](self.channel_name, curr_point[0])
                 if projection_point > curr_point[1]:
                     return False, "L1"
                 return True, "L1"
             else:
-                projection_point = self.lines_mapping["L3"](curr_point[0])
+                projection_point = self.lines_mapping["L3"](self.channel_name, curr_point[0])
                 if projection_point < curr_point[1]:
                     return False, "L3"
                 return True, "L3"
