@@ -103,12 +103,40 @@ class AnalyticSolver:
         )
 
     def solve(
-        self, dt_max: float = 0.01, tolerance: float = 2e-8, count_steps: int = 1
+        self, dt_max: float = 0.01, tolerance: float = 2e-8, count_steps: int = 1, step_solver: bool = False,
+        time_solve: float = 10.0
     ) -> None:
         """
         Функция решения. Решение производится в count_steps шагов.
         При повторном запуске данной функции, решение запускается с
         последней выполненной итерации
+
+        Parameters
+        ----------
+        dt_max : float, optional
+            Максимальный шаг по времени, by default 0.01
+        tolerance : float, optional
+            Точность, by default 2e-8
+        count_steps : int, optional
+            Количество шагов решения, by default 1
+
+        Raises
+        ------
+        ValueError
+            Большое количество шагов (зависание решателя)
+        """
+        if step_solver:
+            self.__step_solver(
+                dt_max=dt_max,
+                tolerance=tolerance,
+                count_steps=count_steps,
+            )
+        else:
+            pass
+
+    def __step_solver(self, dt_max: float = 0.01, tolerance: float = 2e-8, count_steps: int = 1) -> None:
+        """
+        Функция решения. Решение производится в count_steps шагов.
 
         Parameters
         ----------
@@ -135,6 +163,7 @@ class AnalyticSolver:
             steps_count = 0
             while True:
                 if steps_count > 1e5:
+                    # FIXME: При моделировании разворотов, решатель всегда будет зависать
                     raise ValueError("Решатель завис, понизьте точность")
 
                 current_angle, current_w, step_time, intersection = self.__next_step(
