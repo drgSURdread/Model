@@ -25,21 +25,40 @@ import time
 from calculate_moments import ComputeMoments
 
 def start(ref_file_path: str):
+    """
+        Запускает инциализацию параметров
+
+    Args:
+        ref_file_path (str): путь до `.xlsx` файла
+    """
     initial.init_objects(ref_file_path)
 
 def get_moments(channel_name: str):
+    """
+    Возвращает значения гравитационного момента (для отладки)
+    Args:
+        channel_name (str): название канала
+    """
     index_channel = MotionControlSystem.index_channel_mapping[channel_name]
     disturbing_moment = ComputeMoments.gravitation_moment(reduced=True)
     return disturbing_moment[index_channel, 0]
 
+# TODO: Добавить передачу параметров решателя
 def numerical_solution():
+    """
+    Запускает численный решатель
+    """
     sol = NumericalSolver(reduced=True)
     start_time = time.time()
     sol.new_solve(end_time=100)
     print("Время выполнения", time.time() - start_time)
     return sol
 
+# TODO: Добавить передачу параметров решателя
 def analytic_solution():
+    """
+    Запускает аналитический решатель
+    """
     sol = AnalyticSolver("nu")
     start_time = time.time()
     sol.solve()
