@@ -218,6 +218,7 @@ class AnalyticSolver:
                 curr_point=((current_angle, current_w)),
                 step=step_time,
                 tolerance=tolerance,
+                dt_max=dt_max,
             )
 
             self.__set_angle_value(current_angle)
@@ -227,7 +228,7 @@ class AnalyticSolver:
             if intersection:
                 step_time = dt_max
 
-    def __next_step(self, curr_point: tuple, step: float, tolerance: float) -> tuple:
+    def __next_step(self, curr_point: tuple, step: float, tolerance: float, dt_max: float = 0.05) -> tuple:
         """
         Выполняет следующий шаг аналитического решения
 
@@ -256,7 +257,7 @@ class AnalyticSolver:
         return next_angle, next_w, step_time, False
 
     def __set_new_step_time(
-        self, curr_point: tuple, curr_step: float, tolerance: float
+        self, curr_point: tuple, curr_step: float, tolerance: float, dt_max: float = 0.05,
     ) -> tuple:
         """
         Устанавливает новый шаг по времени
@@ -287,7 +288,10 @@ class AnalyticSolver:
             )
 
             if not intersection:
-                return new_step_time, False
+                if new_step_time * 2 < dt_max:
+                    return new_step_time * 2, False
+                else:
+                    return dt_max, False
 
             if new_step_time < tolerance:
                 self.phase_plane_obj.update_current_curve(line)
