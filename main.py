@@ -55,20 +55,20 @@ def numerical_solution():
     return sol
 
 # TODO: Добавить передачу параметров решателя
-def analytic_solution():
+def analytic_solution(time_solve: float = 10.0):
     """
     Запускает аналитический решатель
     """
     sol = AnalyticSolver("nu")
     start_time = time.time()
-    sol.solve()
+    sol.solve(time_solve=time_solve)
     print("Время выполнения", time.time() - start_time)
     return sol
 
 if __name__ == "__main__":
     start("initialization/DATA_REF.xlsx")
 
-    sol = analytic_solution()
+    sol = analytic_solution(time_solve=100.0)
     sol.plot_phase_portrait("nu")
     
     
