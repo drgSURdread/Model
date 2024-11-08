@@ -352,7 +352,7 @@ class AnalyticSolver:
             / np.pi
         )
         velocity_line_1 = self.phase_plane_obj.get_values_on_switch_line(
-            "L1", angles_line_1
+            "L1", angles_line_1, self.control_channel,
         )
         angles_line_2 = (
             np.linspace(
@@ -364,7 +364,7 @@ class AnalyticSolver:
             / np.pi
         )
         velocity_line_2 = self.phase_plane_obj.get_values_on_switch_line(
-            "L2", angles_line_2
+            "L2", angles_line_2, self.control_channel,
         )
 
         angles_line_3 = (
@@ -377,7 +377,7 @@ class AnalyticSolver:
             / np.pi
         )
         velocity_line_3 = self.phase_plane_obj.get_values_on_switch_line(
-            "L3", angles_line_3
+            "L3", angles_line_3, self.control_channel,
         )
         angles_line_4 = (
             np.linspace(
@@ -389,7 +389,7 @@ class AnalyticSolver:
             / np.pi
         )
         velocity_line_4 = self.phase_plane_obj.get_values_on_switch_line(
-            "L4", angles_line_4
+            "L4", angles_line_4, self.control_channel,
         )
 
         plt.xlabel("X, град.", fontsize=14, fontweight="bold")
@@ -404,7 +404,7 @@ class AnalyticSolver:
             self.data_angles_mapping[channel_name][1] * 180 / np.pi,
             color="red",
         )
-        plt.savefig("dz/phase_portrait/src")
+        # plt.savefig("dz/phase_portrait/src")
         plt.show()
 
     def plot_x_oscillogram(self, channel_name: str) -> None:
