@@ -75,26 +75,26 @@ class MotionControlSystem:
         float
            Эффективность возмущения в выбраном канале
         """
-        # FIXME: Моменты в канале тангажа и курса очень большие
-        # надо проверить
-
-        #sum_moments = (
-        #    ComputeMoments.aerodynamic_moment()
-        #    + ComputeMoments.gravitation_moment()
-        #    + ComputeMoments.magnetic_moment()
-        #    + ComputeMoments.sun_moment()
-        #)
-
         MotionControlSystem.disturbing_moment = np.array([
             [3.63797881e-8],
             [3.63797881e-8],
             [3.63797881e-8],
         ])
 
-        #for i in range(MotionControlSystem.g.shape[0]):
-        #    MotionControlSystem.g[i, 0] = abs(
-        #        sum_moments[i, 0] / ControlObject.tensor_inertia[i, i]
-        #    )
+        # FIXME: Моменты в канале тангажа и курса очень большие
+        # надо проверить
+
+        sum_moments = (
+            ComputeMoments.aerodynamic_moment()
+            + ComputeMoments.gravitation_moment()
+            + ComputeMoments.magnetic_moment()
+            + ComputeMoments.sun_moment()
+        )
+
+        for i in range(MotionControlSystem.g.shape[0]):
+            MotionControlSystem.g[i, 0] = abs(
+                sum_moments[i, 0] / ControlObject.tensor_inertia[i, i]
+            )
 
     @staticmethod
     def set_a_effectiveness(control_moment_value: np.ndarray) -> float:

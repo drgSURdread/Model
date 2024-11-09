@@ -246,9 +246,11 @@ class AnalyticSolver:
         tuple
             (next_angle, next_w, step_time, intersection_flag)
         """
-        step_time, intersection = self.__set_new_step_time(curr_point, step, tolerance)
+        step_time, intersection, current_line = self.__set_new_step_time(curr_point, step, tolerance)
 
         if intersection:
+            # TODO: Добавить проверку попадания в предельный цикл
+            # И если мы в него попали, запускать расчет характеристик цикла
             return curr_point[0], curr_point[1], step_time, True
 
         next_angle, next_w = self.phase_plane_obj.get_next_point(
@@ -288,14 +290,23 @@ class AnalyticSolver:
             )
 
             if not intersection:
-                if new_step_time * 2 < dt_max:
-                    return new_step_time * 2, False
+                # return new_step_time, False, line
+                next_step_angle, next_step_w = self.phase_plane_obj.get_next_point(
+                    curr_point=curr_point, step=new_step_time * 2
+                )
+                intersection, line = (
+                    self.phase_plane_obj.check_intersection_line_with_new_step(
+                        curr_point=(next_step_angle, next_step_w)
+                    )
+                )
+                if not intersection and 2 * new_step_time <= dt_max:
+                    return new_step_time * 2, False, line
                 else:
-                    return dt_max, False
+                    return new_step_time, False, line
 
             if new_step_time < tolerance:
                 self.phase_plane_obj.update_current_curve(line)
-                return new_step_time, True
+                return new_step_time, True, line
 
             new_step_time = new_step_time / 2
 
