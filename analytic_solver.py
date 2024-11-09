@@ -220,7 +220,7 @@ class AnalyticSolver:
                 self.control_channel
             )
 
-            current_angle, current_w, step_time, intersection = self.__next_step(
+            current_angle, current_w, step_time, intersection, cycle_flag = self.__next_step(
                 curr_point=((current_angle, current_w)),
                 step=step_time,
                 tolerance=tolerance,
@@ -233,6 +233,11 @@ class AnalyticSolver:
 
             if intersection:
                 step_time = dt_max
+            
+            if cycle_flag:
+                print("Попали в предельный цикл. Заканчиваем решение.")
+                # TODO: Добавить вывод информации о цикле
+                break
 
     def __next_step(self, curr_point: tuple, step: float, tolerance: float, dt_max: float = 0.05) -> tuple:
         """
@@ -250,27 +255,29 @@ class AnalyticSolver:
         Returns
         -------
         tuple
-            (next_angle, next_w, step_time, intersection_flag)
+            (next_angle, next_w, step_time, intersection_flag, cycle_flag)
         """
         step_time, intersection, current_line = self.__set_new_step_time(curr_point, step, tolerance)
 
         if intersection:
             if self.phase_plane_obj.current_curve == "G+":
                 if len(ControlObject.y_L1) == 0:
-                    # ControlObject.y_L1 = np.append(ControlObject.y_L1, curr_point[1])
                     ControlObject.y_L1.append(curr_point[1])
                 else:
                     distance = abs(curr_point[1] - ControlObject.y_L1[-1])
-                    # ControlObject.y_L1 = np.append(ControlObject.y_L1, curr_point[1])
                     ControlObject.y_L1.append(curr_point[1])
                     if distance < 1e-7:
-                        print('Попали в предельный цикл')
-            return curr_point[0], curr_point[1], step_time, True
+                        self.__calculate_cycle_characteristics(
+                            curr_point=(curr_point[0], curr_point[1]),
+                        )
+                        return curr_point[0], curr_point[1], step_time, True, True
+                    
+            return curr_point[0], curr_point[1], step_time, True, False
 
         next_angle, next_w = self.phase_plane_obj.get_next_point(
             curr_point=curr_point, step=step_time
         )
-        return next_angle, next_w, step_time, False
+        return next_angle, next_w, step_time, False, False
 
     def __set_new_step_time(
         self, curr_point: tuple, curr_step: float, tolerance: float, dt_max: float = 0.05,
@@ -323,6 +330,9 @@ class AnalyticSolver:
                 return new_step_time, True, line
 
             new_step_time = new_step_time / 2
+
+    def __calculate_cycle_characteristics(self, curr_point: tuple):
+        pass
 
     def __get_figure(self, figure_size: tuple = (10, 8)) -> plt.Axes:
         """

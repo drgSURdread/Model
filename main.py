@@ -59,25 +59,20 @@ def analytic_solution(time_solve: float = 10.0):
     """
     Запускает аналитический решатель
     """
-    sol = AnalyticSolver("psi")
+    sol = AnalyticSolver("gamma")
     start_time = time.time()
 
     # HELP: Настройка dt_max позволяет ускорить решатель, но получить более грубое решение.
     # Пока гоняешь модель на разных параметрах, можно ослабить этот параметр. На финальном графике
     # можно убрать настройку, либо выставить 0.01
-    sol.solve(time_solve=time_solve, dt_max=0.01)
+    sol.solve(time_solve=time_solve, dt_max=0.05)
     print("Время выполнения", time.time() - start_time)
     return sol
 
 if __name__ == "__main__":
     start("initialization/DATA_REF.xlsx")
 
-    sol = analytic_solution(time_solve=10000.0)
-    # Замеры скорости на новом решателе:
-    # 500 c. ~ 2.48c со старым алгоритмом шага
-    # 500 c. ~ 0.32c с новым
-    # 5000 c. ~ не дождался
-    # 5000 c. ~ 12c 
-    sol.plot_phase_portrait("psi")
+    sol = analytic_solution(time_solve=20000.0)
+    sol.plot_phase_portrait("gamma")
     
     

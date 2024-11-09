@@ -90,13 +90,10 @@ class ControlObject:
             Значение угла
         """
         if channel_name == "gamma":
-            # ControlObject.gamma_angles = np.append(ControlObject.gamma_angles, value)
             ControlObject.gamma_angles.append(value)
         elif channel_name == "psi":
-            # ControlObject.psi_angles = np.append(ControlObject.psi_angles, value)
             ControlObject.psi_angles.append(value)
         else:
-            # ControlObject.nu_angles = np.append(ControlObject.nu_angles, value)
             ControlObject.nu_angles.append(value)
         
     @staticmethod
@@ -111,13 +108,10 @@ class ControlObject:
             Значение угловой скорости
         """
         if channel_name == "gamma":
-            # ControlObject.gamma_w = np.append(ControlObject.gamma_w, value)
             ControlObject.gamma_w.append(value)
         elif channel_name == "psi":
-            # ControlObject.psi_w = np.append(ControlObject.psi_w, value)
             ControlObject.psi_w.append(value)
         else:
-            # ControlObject.nu_w = np.append(ControlObject.nu_w, value)
             ControlObject.nu_w.append(value)
 
     @staticmethod
