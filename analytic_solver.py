@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from math import isclose
 from object_data import ControlObject
+from sud_data_class import MotionControlSystem
 from phase_plane import PhasePlane
 
 
@@ -143,7 +144,7 @@ class AnalyticSolver:
                 time_solve=time_solve,
             )
 
-    def __step_solver(self, dt_max: float = 0.01, tolerance: float = 2e-8, count_steps: int = 1) -> None:
+    def __step_solver(self, dt_max: float = 0.01, tolerance: float = 2e-8, count_steps: int = 1, check_cycle: bool = True) -> None:
         """
         Функция решения. Решение производится в count_steps шагов.
 
@@ -175,10 +176,11 @@ class AnalyticSolver:
                     # FIXME: При моделировании разворотов, решатель всегда будет зависать
                     raise ValueError("Решатель завис, понизьте точность")
 
-                current_angle, current_w, step_time, intersection = self.__next_step(
+                current_angle, current_w, step_time, intersection, cycle_flag = self.__next_step(
                     curr_point=((current_angle, current_w)),
                     step=step_time,
                     tolerance=tolerance,
+                    check_cycle=check_cycle,
                 )
                 if intersection:
                     break
@@ -235,11 +237,14 @@ class AnalyticSolver:
                 step_time = dt_max
             
             if cycle_flag:
+                print("-----------")
                 print("Попали в предельный цикл. Заканчиваем решение.")
-                # TODO: Добавить вывод информации о цикле
+                print("Параметры ПЦ:")
+                print("Скважность: ", MotionControlSystem.borehole)
+                print("Период: ", MotionControlSystem.period)
                 break
 
-    def __next_step(self, curr_point: tuple, step: float, tolerance: float, dt_max: float = 0.05) -> tuple:
+    def __next_step(self, curr_point: tuple, step: float, tolerance: float, dt_max: float = 0.05, check_cycle: bool = True) -> tuple:
         """
         Выполняет следующий шаг аналитического решения
 
@@ -266,9 +271,11 @@ class AnalyticSolver:
                 else:
                     distance = abs(curr_point[1] - ControlObject.y_L1[-1])
                     ControlObject.y_L1.append(curr_point[1])
-                    if distance < 1e-7:
+                    if distance < 1e-7 and check_cycle: # TODO: Добавить проверку через относительную погрешность
                         self.__calculate_cycle_characteristics(
                             curr_point=(curr_point[0], curr_point[1]),
+                            dt_max=dt_max,
+                            tolerance=tolerance,
                         )
                         return curr_point[0], curr_point[1], step_time, True, True
                     
@@ -331,8 +338,35 @@ class AnalyticSolver:
 
             new_step_time = new_step_time / 2
 
-    def __calculate_cycle_characteristics(self, curr_point: tuple):
-        pass
+    def __calculate_cycle_characteristics(self, curr_point: tuple, dt_max: float, tolerance: float) -> None:
+        start_time_cicle = ControlObject.time_points[-1]
+        curr_velocity = 0.0
+        sum_time_impulse = 0.0
+        count_curves = 0 # Количество кривых в цикле
+        
+        print("------------")
+        # Пока не прошли по всему ПЦ
+        while not abs(curr_point[1] - curr_velocity) < 1e-7: # TODO: Добавить проверку через относительную погрешность
+            curr_curve = self.phase_plane_obj.current_curve
+            start_time_curve = ControlObject.time_points[-1]
+
+            self.__step_solver(
+                dt_max=dt_max,
+                tolerance=tolerance,
+                check_cycle=False, # Чтобы не попасть в бесконечный цикл
+            )
+
+            curr_velocity = ControlObject.get_velocity_value_in_channel(self.control_channel)
+
+            if curr_curve == "G+" or curr_curve == "G-": # Если выдается импульс, то считаем его время
+                sum_time_impulse += ControlObject.time_points[-1] - start_time_curve
+            
+            count_curves += 1
+            print("Кривых в цикле: ", count_curves)
+        
+        MotionControlSystem.period = ControlObject.time_points[-1] - start_time_cicle
+        MotionControlSystem.borehole = sum_time_impulse / MotionControlSystem.period
+
 
     def __get_figure(self, figure_size: tuple = (10, 8)) -> plt.Axes:
         """

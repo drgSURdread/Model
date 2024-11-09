@@ -59,6 +59,9 @@ class MotionControlSystem:
 
     last_value_F_function: np.ndarray = np.zeros(shape=(3, 1))
 
+    period: float = 0.0 # Период ПЦ
+    borehole: float = 0.0 # Скважность ПЦ
+
     @staticmethod
     def set_g_effectiveness() -> None:
         """

@@ -59,13 +59,13 @@ def analytic_solution(time_solve: float = 10.0):
     """
     Запускает аналитический решатель
     """
-    sol = AnalyticSolver("gamma")
+    sol = AnalyticSolver("psi")
     start_time = time.time()
 
     # HELP: Настройка dt_max позволяет ускорить решатель, но получить более грубое решение.
     # Пока гоняешь модель на разных параметрах, можно ослабить этот параметр. На финальном графике
     # можно убрать настройку, либо выставить 0.01
-    sol.solve(time_solve=time_solve, dt_max=0.05)
+    sol.solve(time_solve=time_solve, dt_max=0.1)
     print("Время выполнения", time.time() - start_time)
     return sol
 
@@ -73,6 +73,6 @@ if __name__ == "__main__":
     start("initialization/DATA_REF.xlsx")
 
     sol = analytic_solution(time_solve=20000.0)
-    sol.plot_phase_portrait("gamma")
+    sol.plot_phase_portrait("psi")
     
     
