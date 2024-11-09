@@ -75,6 +75,9 @@ class ControlObject:
 
     time_points: np.ndarray[float] = np.array([0.0])
 
+    # Далее идут данные для вычисления различных характеристик циклов
+    y_L1: np.ndarray[float] = np.array([]) # Значения скорости на L1
+
     @staticmethod
     def set_angles_in_channel(channel_name: str, value: float) -> None:
         """

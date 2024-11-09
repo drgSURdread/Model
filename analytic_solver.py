@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
+from math import isclose
 from object_data import ControlObject
 from phase_plane import PhasePlane
 
@@ -205,8 +206,13 @@ class AnalyticSolver:
         time_solve : float, optional
             Время решения, by default 10.0
         """
+        count_step_progress = 0
         step_time = dt_max
         while ControlObject.time_points[-1] < time_solve:
+            if isclose(ControlObject.time_points[-1], count_step_progress * time_solve / 10, rel_tol=2e-3):
+                count_step_progress += 1
+                print("Прогресс выполнения: [", "#" * count_step_progress, "]")
+
             current_angle = ControlObject.get_angle_value_in_channel(
                 self.control_channel
             )
@@ -249,8 +255,14 @@ class AnalyticSolver:
         step_time, intersection, current_line = self.__set_new_step_time(curr_point, step, tolerance)
 
         if intersection:
-            # TODO: Добавить проверку попадания в предельный цикл
-            # И если мы в него попали, запускать расчет характеристик цикла
+            if self.phase_plane_obj.current_curve == "G+":
+                if ControlObject.y_L1.size == 0:
+                    ControlObject.y_L1 = np.append(ControlObject.y_L1, curr_point[1])
+                else:
+                    distance = abs(curr_point[1] - ControlObject.y_L1[-1])
+                    ControlObject.y_L1 = np.append(ControlObject.y_L1, curr_point[1])
+                    if distance < 1e-7:
+                        print('Попали в предельный цикл')
             return curr_point[0], curr_point[1], step_time, True
 
         next_angle, next_w = self.phase_plane_obj.get_next_point(
@@ -290,7 +302,7 @@ class AnalyticSolver:
             )
 
             if not intersection:
-                # return new_step_time, False, line
+                # Если на текущем шаге и удвоенном, не произошло пересечение, то увеличиваем шаг
                 next_step_angle, next_step_w = self.phase_plane_obj.get_next_point(
                     curr_point=curr_point, step=new_step_time * 2
                 )
