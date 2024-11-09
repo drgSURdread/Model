@@ -64,19 +64,19 @@ class ControlObject:
     sun_pressure_shoulder_vector: np.ndarray[float] = np.zeros(shape=(3, 1))
     magnetic_moment: np.ndarray[float] = np.zeros(shape=(3, 1))
 
-    gamma_angles: np.ndarray[float] = np.array([])
-    psi_angles: np.ndarray[float] = np.array([])
-    nu_angles: np.ndarray[float] = np.array([])
-    argument_perigee: np.ndarray[float] = np.array([])
+    gamma_angles: list = list()
+    psi_angles: list = list()
+    nu_angles: list = list()
+    argument_perigee: list = list()
 
-    gamma_w: np.ndarray[float] = np.array([])
-    psi_w: np.ndarray[float] = np.array([])
-    nu_w: np.ndarray[float] = np.array([])
+    gamma_w: list = list()
+    psi_w: list = list()
+    nu_w: list = list()
 
-    time_points: np.ndarray[float] = np.array([0.0])
+    time_points: list = [0.0]
 
     # Далее идут данные для вычисления различных характеристик циклов
-    y_L1: np.ndarray[float] = np.array([]) # Значения скорости на L1
+    y_L1: list = [] # Значения скорости на L1
 
     @staticmethod
     def set_angles_in_channel(channel_name: str, value: float) -> None:
@@ -90,12 +90,15 @@ class ControlObject:
             Значение угла
         """
         if channel_name == "gamma":
-            ControlObject.gamma_angles = np.append(ControlObject.gamma_angles, value)
+            # ControlObject.gamma_angles = np.append(ControlObject.gamma_angles, value)
+            ControlObject.gamma_angles.append(value)
         elif channel_name == "psi":
-            ControlObject.psi_angles = np.append(ControlObject.psi_angles, value)
+            # ControlObject.psi_angles = np.append(ControlObject.psi_angles, value)
+            ControlObject.psi_angles.append(value)
         else:
-            ControlObject.nu_angles = np.append(ControlObject.nu_angles, value)
-
+            # ControlObject.nu_angles = np.append(ControlObject.nu_angles, value)
+            ControlObject.nu_angles.append(value)
+        
     @staticmethod
     def set_velocity_in_channel(channel_name: str, value: float) -> None:
         """
@@ -108,11 +111,14 @@ class ControlObject:
             Значение угловой скорости
         """
         if channel_name == "gamma":
-            ControlObject.gamma_w = np.append(ControlObject.gamma_w, value)
+            # ControlObject.gamma_w = np.append(ControlObject.gamma_w, value)
+            ControlObject.gamma_w.append(value)
         elif channel_name == "psi":
-            ControlObject.psi_w = np.append(ControlObject.psi_w, value)
+            # ControlObject.psi_w = np.append(ControlObject.psi_w, value)
+            ControlObject.psi_w.append(value)
         else:
-            ControlObject.nu_w = np.append(ControlObject.nu_w, value)
+            # ControlObject.nu_w = np.append(ControlObject.nu_w, value)
+            ControlObject.nu_w.append(value)
 
     @staticmethod
     def get_angle_value_in_channel(channel_name: str) -> float:

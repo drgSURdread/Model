@@ -256,11 +256,13 @@ class AnalyticSolver:
 
         if intersection:
             if self.phase_plane_obj.current_curve == "G+":
-                if ControlObject.y_L1.size == 0:
-                    ControlObject.y_L1 = np.append(ControlObject.y_L1, curr_point[1])
+                if len(ControlObject.y_L1) == 0:
+                    # ControlObject.y_L1 = np.append(ControlObject.y_L1, curr_point[1])
+                    ControlObject.y_L1.append(curr_point[1])
                 else:
                     distance = abs(curr_point[1] - ControlObject.y_L1[-1])
-                    ControlObject.y_L1 = np.append(ControlObject.y_L1, curr_point[1])
+                    # ControlObject.y_L1 = np.append(ControlObject.y_L1, curr_point[1])
+                    ControlObject.y_L1.append(curr_point[1])
                     if distance < 1e-7:
                         print('Попали в предельный цикл')
             return curr_point[0], curr_point[1], step_time, True
@@ -414,16 +416,16 @@ class AnalyticSolver:
         """
         self.data_angles_mapping = {
             "nu": (
-                ControlObject.nu_angles,
-                ControlObject.nu_w,
+                np.array(ControlObject.nu_angles),
+                np.array(ControlObject.nu_w),
             ),
             "psi": (
-                ControlObject.psi_angles,
-                ControlObject.psi_w,
+                np.array(ControlObject.psi_angles),
+                np.array(ControlObject.psi_w),
             ),
             "gamma": (
-                ControlObject.gamma_angles,
-                ControlObject.gamma_w,
+                np.array(ControlObject.gamma_angles),
+                np.array(ControlObject.gamma_w),
             ),
         }
 

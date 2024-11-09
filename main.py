@@ -72,7 +72,7 @@ def analytic_solution(time_solve: float = 10.0):
 if __name__ == "__main__":
     start("initialization/DATA_REF.xlsx")
 
-    sol = analytic_solution(time_solve=5000.0)
+    sol = analytic_solution(time_solve=10000.0)
     # Замеры скорости на новом решателе:
     # 500 c. ~ 2.48c со старым алгоритмом шага
     # 500 c. ~ 0.32c с новым
