@@ -61,6 +61,7 @@ class MotionControlSystem:
 
     period: float = 0.0 # Период ПЦ
     borehole: float = 0.0 # Скважность ПЦ
+    count_impulse: float = 0 # Количество включений в ПЦ
 
     @staticmethod
     def set_g_effectiveness() -> None:

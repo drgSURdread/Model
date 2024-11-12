@@ -21,6 +21,7 @@ import initialization.initial_data_class as initial
 from numerical_solver import NumericalSolver
 from analytic_solver import AnalyticSolver
 from sud_data_class import MotionControlSystem
+from object_data import ControlObject
 import time
 from calculate_moments import ComputeMoments
 
@@ -55,11 +56,11 @@ def numerical_solution():
     return sol
 
 # TODO: Добавить передачу параметров решателя
-def analytic_solution(time_solve: float = 10.0):
+def analytic_solution(channel_name: str = "gamma", time_solve: float = 10.0):
     """
     Запускает аналитический решатель
     """
-    sol = AnalyticSolver("psi")
+    sol = AnalyticSolver(channel_name)
     start_time = time.time()
 
     # HELP: Настройка dt_max позволяет ускорить решатель, но получить более грубое решение.
@@ -71,8 +72,10 @@ def analytic_solution(time_solve: float = 10.0):
 
 if __name__ == "__main__":
     start("initialization/DATA_REF.xlsx")
+    channel_name = "psi"
 
-    sol = analytic_solution(time_solve=20000.0)
-    sol.plot_phase_portrait("psi")
+    sol = analytic_solution(channel_name, time_solve=40000.0)
+    print(ControlObject.y_L1)
+    sol.plot_phase_portrait(channel_name)
     
     

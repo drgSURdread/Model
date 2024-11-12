@@ -242,6 +242,7 @@ class AnalyticSolver:
                 print("Параметры ПЦ:")
                 print("Скважность: ", MotionControlSystem.borehole)
                 print("Период: ", MotionControlSystem.period)
+                print("Количество включений: ", MotionControlSystem.count_impulse)
                 break
 
     def __next_step(self, curr_point: tuple, step: float, tolerance: float, dt_max: float = 0.05, check_cycle: bool = True) -> tuple:
@@ -269,7 +270,7 @@ class AnalyticSolver:
                 if len(ControlObject.y_L1) == 0:
                     ControlObject.y_L1.append(curr_point[1])
                 else:
-                    distance = abs(curr_point[1] - ControlObject.y_L1[-1])
+                    distance = abs(curr_point[1] - ControlObject.y_L1[-1]) # FIXME: Это работает только для одноимпульсного ПЦ
                     ControlObject.y_L1.append(curr_point[1])
                     if distance < 1e-7 and check_cycle: # TODO: Добавить проверку через относительную погрешность
                         self.__calculate_cycle_characteristics(
@@ -360,6 +361,7 @@ class AnalyticSolver:
 
             if curr_curve == "G+" or curr_curve == "G-": # Если выдается импульс, то считаем его время
                 sum_time_impulse += ControlObject.time_points[-1] - start_time_curve
+                MotionControlSystem.count_impulse += 1
             
             count_curves += 1
             print("Кривых в цикле: ", count_curves)
