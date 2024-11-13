@@ -22,6 +22,9 @@ class EnergyDiagram:
             self.cycles = dict()
             for angle_start in nu_matrix[0]:
                 for velocity_start in nu_matrix[1]:
+                    MotionControlSystem.borehole = 0.0
+                    MotionControlSystem.count_impulse = 0
+                    MotionControlSystem.period = 0.0
                     # Для каждого НУ инициализируем решатель и решаем, пока не получим цикл
                     print("Начинаем движение из точки ({}, {})".format(angle_start * 180 / np.pi, velocity_start * 180 / np.pi))
                     
@@ -33,6 +36,7 @@ class EnergyDiagram:
                     sol.solve(time_solve=40000.0, dt_max=0.1)
                     
                     self.__save_cycles_parameters(param_value, nu=(angle_start, velocity_start))
+            self.__save_results()
 
     def __set_zero_lst_to_control_object(self, nu: tuple) -> None:
         if self.channel_name == "nu":
@@ -52,3 +56,14 @@ class EnergyDiagram:
                 "borehole": MotionControlSystem.borehole,
             }
         }
+
+    def __save_results(self) -> None:
+        for _ in self.cycles.keys(): # Перебираем НУ
+            self.results[self.cycles[_]] = dict()
+            for param_value in self.cycles[_]: # Перебираем данные полученных циклов
+                if self.cycles[_][param_value]["type_cycle"] not in self.results[param_value]:
+                    self.results[param_value][self.cycles[_][param_value]["type_cycle"]] = \
+                        self.cycles[_][param_value]["borehole"]
+                
+
+
