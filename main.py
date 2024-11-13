@@ -74,8 +74,8 @@ if __name__ == "__main__":
     start("initialization/DATA_REF.xlsx")
     channel_name = "psi"
 
-    sol = analytic_solution(channel_name, time_solve=40000.0)
-    print(ControlObject.y_L1)
+    sol = analytic_solution(channel_name, time_solve=20000.0)
+    # print(ControlObject.y_L1)
     sol.plot_phase_portrait(channel_name)
     
     
