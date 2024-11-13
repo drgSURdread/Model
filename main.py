@@ -75,12 +75,12 @@ def analytic_solution(channel_name: str = "gamma", time_solve: float = 10.0):
 if __name__ == "__main__":
     start("initialization/DATA_REF.xlsx")
     # Параметры для построения энергетической диаграммы
-    channel_name = "nu"                  # Название канала
+    channel_name = "psi"                  # Название канала
     parameter_name = "k"                 # Название варьируемого параметра
-    value_lst = np.linspace(10, 13, 3)   # Значения варьируемого параметра
+    value_lst = np.linspace(88, 90, 3)   # Значения варьируемого параметра
     nu_matrix = [                        # Набор начальных условий
-        np.linspace(-0.0001, 0.0001, 3),
-        np.linspace(-0.0001, 0.0001, 3)
+        np.linspace(-0.00001, 0.00001, 2),
+        np.linspace(-0.00001, 0.00001, 2)
     ]
 
     diagram = EnergyDiagram(

@@ -20,6 +20,7 @@ class EnergyDiagram:
         # Уже предвкушаю, как я не дождусь
         for param_value in self.value_lst:
             self.cycles = dict()
+            MotionControlSystem.k[1] = param_value # TODO: Создать метод
             for angle_start in nu_matrix[0]:
                 for velocity_start in nu_matrix[1]:
                     MotionControlSystem.borehole = 0.0
@@ -52,6 +53,8 @@ class EnergyDiagram:
         else:
             ControlObject.gamma_angles = [nu[0]]
             ControlObject.gamma_w = [nu[1]]
+        ControlObject.y_L1 = []
+        ControlObject.time_points = [0.0]
 
     def __save_cycles_parameters(self, parameter_value: float, nu: tuple) -> None:
         self.cycles[nu] = {
@@ -62,9 +65,11 @@ class EnergyDiagram:
         }
 
     def __save_results(self) -> None:
+        # FIXME: Переписать это уродство
         for _ in self.cycles.keys(): # Перебираем НУ
-            self.results[self.cycles[_]] = dict()
-            for param_value in self.cycles[_]: # Перебираем данные полученных циклов
+            for param_value in self.cycles[_].keys(): # Перебираем данные полученных циклов
+                if param_value not in self.results:
+                    self.results[param_value] = dict()
                 if self.cycles[_][param_value]["type_cycle"] not in self.results[param_value]:
                     self.results[param_value][self.cycles[_][param_value]["type_cycle"]] = \
                         self.cycles[_][param_value]["borehole"]
