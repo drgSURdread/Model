@@ -35,14 +35,13 @@ def init_control_object(data: pd.DataFrame) -> None:
     ControlObject.magnetic_moment = parser_data.get_magnetic_moment(data)
 
     angles_data = parser_data.get_initial_values(data)
-    ControlObject.gamma_angles = np.append(ControlObject.gamma_angles, angles_data["gamma"])
-    ControlObject.psi_angles = np.append(ControlObject.psi_angles, angles_data["psi"])
-    ControlObject.nu_angles = np.append(ControlObject.nu_angles, angles_data["nu"])
-    ControlObject.gamma_w = np.append(ControlObject.gamma_w, angles_data["gamma_w"])
-    ControlObject.psi_w = np.append(ControlObject.psi_w, angles_data["psi_w"])
-    ControlObject.nu_w = np.append(ControlObject.nu_w, angles_data["nu_w"])
-    ControlObject.argument_perigee = np.append(ControlObject.argument_perigee, angles_data["arg_perigee"])
-
+    ControlObject.gamma_angles.append(angles_data["gamma"])
+    ControlObject.psi_angles.append(angles_data["psi"])
+    ControlObject.nu_angles.append(angles_data["nu"])
+    ControlObject.gamma_w.append(angles_data["gamma_w"])
+    ControlObject.psi_w.append(angles_data["psi_w"])
+    ControlObject.nu_w.append(angles_data["nu_w"])
+    ControlObject.argument_perigee.append(angles_data["arg_perigee"])
 
 def init_motion_control_system(data: pd.DataFrame) -> None:
     """
