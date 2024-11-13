@@ -17,11 +17,13 @@ import sys
 sys.path.append("initialization")
 
 import matplotlib.pyplot as plt
+import numpy as np
 import initialization.initial_data_class as initial
 from numerical_solver import NumericalSolver
 from analytic_solver import AnalyticSolver
 from sud_data_class import MotionControlSystem
 from object_data import ControlObject
+from energy_diagram import EnergyDiagram
 import time
 from calculate_moments import ComputeMoments
 
@@ -72,10 +74,23 @@ def analytic_solution(channel_name: str = "gamma", time_solve: float = 10.0):
 
 if __name__ == "__main__":
     start("initialization/DATA_REF.xlsx")
-    channel_name = "psi"
+    # Параметры для построения энергетической диаграммы
+    channel_name = "nu"                  # Название канала
+    parameter_name = "k"                 # Название варьируемого параметра
+    value_lst = np.linspace(10, 13, 3)   # Значения варьируемого параметра
+    nu_matrix = [                        # Набор начальных условий
+        np.linspace(-0.0001, 0.0001, 3),
+        np.linspace(-0.0001, 0.0001, 3)
+    ]
 
-    sol = analytic_solution(channel_name, time_solve=20000.0)
+    diagram = EnergyDiagram(
+        channel_name=channel_name,
+        parameter_name=parameter_name,
+        value_lst=value_lst,
+    )
+    diagram.start(nu_matrix=nu_matrix)
+    # sol = analytic_solution(channel_name, time_solve=20000.0)
     # print(ControlObject.y_L1)
-    sol.plot_phase_portrait(channel_name)
+    # sol.plot_phase_portrait(channel_name)
     
     

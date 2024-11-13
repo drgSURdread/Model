@@ -37,6 +37,10 @@ class EnergyDiagram:
                     
                     self.__save_cycles_parameters(param_value, nu=(angle_start, velocity_start))
             self.__save_results()
+            print(
+                "Для {} = {}".format(self.parameter_name, param_value), 
+                self.results
+            )
 
     def __set_zero_lst_to_control_object(self, nu: tuple) -> None:
         if self.channel_name == "nu":
