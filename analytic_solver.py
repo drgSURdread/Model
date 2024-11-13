@@ -271,14 +271,14 @@ class AnalyticSolver:
                     ControlObject.y_L1.append(curr_point[1])
                 else:
                     distance = abs(curr_point[1] - ControlObject.y_L1[-1]) # FIXME: Это работает только для одноимпульсного ПЦ
-                    ControlObject.y_L1.append(curr_point[1])
-                    if distance < 1e-7 and check_cycle: # TODO: Добавить проверку через относительную погрешность
+                    if check_cycle and self.__check_lim_cycle(curr_point[1]): # TODO: Добавить проверку через относительную погрешность
                         self.__calculate_cycle_characteristics(
                             curr_point=(curr_point[0], curr_point[1]),
                             dt_max=dt_max,
                             tolerance=tolerance,
                         )
                         return curr_point[0], curr_point[1], step_time, True, True
+                    ControlObject.y_L1.append(curr_point[1])
                     
             return curr_point[0], curr_point[1], step_time, True, False
 
@@ -286,6 +286,12 @@ class AnalyticSolver:
             curr_point=curr_point, step=step_time
         )
         return next_angle, next_w, step_time, False, False
+    
+    def __check_lim_cycle(self, curr_velocity):
+        distance_vector = np.abs(np.array(ControlObject.y_L1) - curr_velocity)
+        if not np.any(distance_vector < 2e-8):
+            return False
+        return True
 
     def __set_new_step_time(
         self, curr_point: tuple, curr_step: float, tolerance: float, dt_max: float = 0.05,
