@@ -20,7 +20,11 @@ class EnergyDiagram:
         # Уже предвкушаю, как я не дождусь
         for param_value in self.value_lst:
             self.cycles = dict()
-            MotionControlSystem.k[1] = param_value # TODO: Создать метод
+            MotionControlSystem.set_parameter_value(
+                self.channel_name,
+                self.parameter_name,
+                param_value,
+            )
             for angle_start in nu_matrix[0]:
                 for velocity_start in nu_matrix[1]:
                     MotionControlSystem.borehole = 0.0

@@ -75,9 +75,9 @@ def analytic_solution(channel_name: str = "gamma", time_solve: float = 10.0):
 if __name__ == "__main__":
     start("initialization/DATA_REF.xlsx")
     # Параметры для построения энергетической диаграммы
-    channel_name = "psi"                  # Название канала
+    channel_name = "nu"                  # Название канала
     parameter_name = "k"                 # Название варьируемого параметра
-    value_lst = np.linspace(88, 90, 3)   # Значения варьируемого параметра
+    value_lst = np.linspace(10, 30, 20)   # Значения варьируемого параметра
     nu_matrix = [                        # Набор начальных условий
         np.linspace(-0.00001, 0.00001, 2),
         np.linspace(-0.00001, 0.00001, 2)
@@ -88,7 +88,9 @@ if __name__ == "__main__":
         parameter_name=parameter_name,
         value_lst=value_lst,
     )
+    start_time = time.time()
     diagram.start(nu_matrix=nu_matrix)
+    print("Общее время работы: ", time.time() - start_time)
     # sol = analytic_solution(channel_name, time_solve=20000.0)
     # print(ControlObject.y_L1)
     # sol.plot_phase_portrait(channel_name)

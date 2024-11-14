@@ -64,6 +64,29 @@ class MotionControlSystem:
     count_impulse: float = 0 # Количество включений в ПЦ
 
     @staticmethod
+    def set_parameter_value(channel_name: str, parameter_name: str, parameter_value) -> None:
+        if parameter_name == "k":
+            MotionControlSystem.k[
+                MotionControlSystem.index_channel_mapping[channel_name]
+            ] = parameter_value
+        elif parameter_value == "h":
+            MotionControlSystem.h[
+                MotionControlSystem.index_channel_mapping[channel_name]
+            ] = parameter_value
+        elif parameter_value == "alpha":
+            MotionControlSystem.alpha[
+                MotionControlSystem.index_channel_mapping[channel_name]
+            ] = parameter_value
+        elif parameter_value == "g":
+            MotionControlSystem.g[
+                MotionControlSystem.index_channel_mapping[channel_name]
+            ] = parameter_value
+        elif parameter_value == "a":
+            MotionControlSystem.a[
+                MotionControlSystem.index_channel_mapping[channel_name]
+            ] = parameter_value
+
+    @staticmethod
     def set_g_effectiveness() -> None:
         """
         Вычисляет эффективность возмущения основываясь на известном тензоре инерции
