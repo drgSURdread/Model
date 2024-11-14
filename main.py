@@ -77,10 +77,10 @@ if __name__ == "__main__":
     # Параметры для построения энергетической диаграммы
     channel_name = "nu"                  # Название канала
     parameter_name = "k"                 # Название варьируемого параметра
-    value_lst = np.linspace(10, 30, 20)   # Значения варьируемого параметра
-    nu_matrix = [                        # Набор начальных условий
-        np.linspace(-0.00001, 0.00001, 5),
-        np.linspace(-0.00001, 0.00001, 5)
+    value_lst = np.linspace(1, 10, 40)   # Значения варьируемого параметра
+    NU_matrix = [                        # Набор начальных условий
+        np.array([0.0] * 2),
+        np.linspace(1e-5, 0.01, 4)
     ]
 
     diagram = EnergyDiagram(
@@ -88,12 +88,18 @@ if __name__ == "__main__":
         parameter_name=parameter_name,
         value_lst=value_lst,
     )
-    #start_time = time.time()
-    #diagram.start(nu_matrix=nu_matrix)
-    #print("Общее время работы: ", time.time() - start_time)
+    start_time = time.time()
+    #diagram.start(nu_matrix=NU_matrix, fast_solve=True)
+    print("Общее время работы: ", time.time() - start_time)
     diagram.plot_diagram()
-    # sol = analytic_solution(channel_name, time_solve=20000.0)
-    # print(ControlObject.y_L1)
+    # MotionControlSystem.set_parameter_value(
+    #     channel_name,
+    #     parameter_name,
+    #     parameter_value=value_lst[0],
+    # )
+    # ControlObject.nu_angles = [nu_matrix[0][0]]
+    # ControlObject.nu_w = [nu_matrix[1][0]]
+    # sol = analytic_solution(channel_name, time_solve=30000.0)
     # sol.plot_phase_portrait(channel_name)
     
     

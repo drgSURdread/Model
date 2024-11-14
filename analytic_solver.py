@@ -289,7 +289,7 @@ class AnalyticSolver:
     
     def __check_lim_cycle(self, curr_velocity):
         distance_vector = np.abs(np.array(ControlObject.y_L1) - curr_velocity)
-        if not np.any(distance_vector < 2e-8):
+        if not np.any(distance_vector < 1e-8):
             return False
         return True
 
@@ -353,7 +353,7 @@ class AnalyticSolver:
         
         print("------------")
         # Пока не прошли по всему ПЦ
-        while not abs(curr_point[1] - curr_velocity) < 1e-7: # TODO: Добавить проверку через относительную погрешность
+        while not abs(curr_point[1] - curr_velocity) < 1e-6: # TODO: Добавить проверку через относительную погрешность
             curr_curve = self.phase_plane_obj.current_curve
             start_time_curve = ControlObject.time_points[-1]
 

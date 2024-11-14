@@ -11,10 +11,10 @@ class EnergyDiagram:
         self.value_lst = value_lst
 
         # self.results = dict()
-        self.results = {np.float64(10.0): {'G1': np.float64(3.8061766950372053e-05), 'G2': np.float64(3.795672744777635e-05)}, np.float64(11.052631578947368): {'G1': np.float64(3.7882157958372294e-05)}, np.float64(12.105263157894736): {'G1': np.float64(3.8034645640086427e-05)}, np.float64(13.157894736842106): {'G1': np.float64(3.790193250956863e-05)}, np.float64(14.210526315789473): {'G1': np.float64(3.7918370032905784e-05)}, np.float64(15.263157894736842): {'G1': np.float64(3.801575162906061e-05)}, np.float64(16.315789473684212): {'G1': np.float64(3.80083686569093e-05)}, np.float64(17.36842105263158): {'G1': np.float64(3.8003448196500165e-05)}, np.float64(18.421052631578945): {'G1': np.float64(3.799737117039478e-05)}, np.float64(19.473684210526315): {'G1': np.float64(3.7940371264199504e-05)}, np.float64(20.526315789473685): {'G1': np.float64(3.794586119116573e-05)}, np.float64(21.57894736842105): {'G1': np.float64(3.797672103597023e-05)}, np.float64(22.63157894736842): {'G1': np.float64(3.794447264806094e-05)}, np.float64(23.684210526315788): {'G1': np.float64(3.7951774109486456e-05)}, np.float64(24.736842105263158): {'G1': np.float64(3.7983064326410665e-05)}, np.float64(25.789473684210527): {'G1': np.float64(3.797317662957775e-05)}, np.float64(26.842105263157894): {'G1': np.float64(3.795537244089037e-05)}, np.float64(27.894736842105264): {'G1': np.float64(3.795677222432783e-05)}, np.float64(28.94736842105263): {'G1': np.float64(3.7952701998180464e-05)}, np.float64(30.0): {'G1': np.float64(3.796741728087348e-05)}}
+        self.results = {np.float64(1.0): {'G2': np.float64(0.005436746905643897)}, np.float64(1.4736842105263157): {'G55': np.float64(0.0016639682994388596)}, np.float64(1.9473684210526314): {'G25': np.float64(0.0009290463603926173)}, np.float64(2.4210526315789473): {'G17': np.float64(0.0006415522167733315)}, np.float64(2.894736842105263): {'G11': np.float64(0.00041717216299175263)}, np.float64(3.3684210526315788): {'G9': np.float64(0.0003409573925152908)}, np.float64(3.8421052631578947): {'G7': np.float64(0.00026585026283619084)}, np.float64(4.315789473684211): {'G5': np.float64(0.00019004370934490048)}, np.float64(4.789473684210526): {'G5': np.float64(0.00018992234735430288)}, np.float64(5.263157894736842): {'G3': np.float64(0.00011364284219335057)}, np.float64(5.7368421052631575): {'G3': np.float64(0.00011406015312004907)}, np.float64(6.2105263157894735): {'G3': np.float64(0.00011372484802487051)}, np.float64(6.684210526315789): {'G1': np.float64(3.787204938213007e-05)}, np.float64(7.157894736842105): {'G1': np.float64(3.8045989166847965e-05)}, np.float64(7.63157894736842): {'G1': np.float64(3.788816668569801e-05)}, np.float64(8.105263157894736): {'G1': np.float64(3.80355483664924e-05)}, np.float64(8.578947368421051): {'G1': np.float64(3.803085368419211e-05)}, np.float64(9.052631578947368): {'G1': np.float64(3.802825098894889e-05)}, np.float64(9.526315789473683): {'G1': np.float64(3.7905147942376344e-05)}, np.float64(10.0): {'G1': np.float64(3.801680976379711e-05)}}
         self.cycles = dict() # Хранит найденные на текущей итерации ПЦ
     
-    def start(self, nu_matrix: np.ndarray) -> None:
+    def start(self, nu_matrix: np.ndarray, fast_solve: bool = False) -> None:
         """
         Перебираем НУ в квадрате со сторонами [angle_min, angle_max] и [velocity_min, velocity_max]
         """
@@ -25,6 +25,7 @@ class EnergyDiagram:
                 self.parameter_name,
                 param_value,
             )
+            flag_save = False
             for angle_start in nu_matrix[0]:
                 for velocity_start in nu_matrix[1]:
                     MotionControlSystem.borehole = 0.0
@@ -38,9 +39,13 @@ class EnergyDiagram:
                     )
                     
                     sol = AnalyticSolver(self.channel_name)
-                    sol.solve(time_solve=40000.0, dt_max=0.1)
-                    
-                    self.__save_cycles_parameters(param_value, nu=(angle_start, velocity_start))
+                    sol.solve(time_solve=50000.0, dt_max=0.1)
+                    if fast_solve and MotionControlSystem.period != 0.0:
+                        flag_save = True
+                        self.__save_cycles_parameters(param_value, nu=(angle_start, velocity_start))
+                        break
+                if fast_solve and flag_save:
+                    break
             self.__save_results()
             print(
                 "Для {} = {}".format(self.parameter_name, param_value), 
@@ -101,12 +106,20 @@ class EnergyDiagram:
         plt.xlabel(self.parameter_name, fontsize=14, fontweight="bold")
         plt.ylabel("λ", fontsize=14, fontweight="bold")
         for type_cycle in plot_data.keys():
-            ax.plot(
-                plot_data[type_cycle][0],
-                plot_data[type_cycle][1],
-                label=type_cycle,
-                linewidth=3,
-            )
+            if len(plot_data[type_cycle][0]) == 1:
+                ax.scatter(
+                    plot_data[type_cycle][0],
+                    plot_data[type_cycle][1],
+                    label=type_cycle,
+                    s=20,
+                )
+            else:
+                ax.plot(
+                    plot_data[type_cycle][0],
+                    plot_data[type_cycle][1],
+                    label=type_cycle,
+                    linewidth=3,
+                )
         ax.legend(fontsize=14)
         plt.show()
 
