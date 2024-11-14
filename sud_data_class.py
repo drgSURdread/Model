@@ -3,8 +3,6 @@ from calculate_moments import ComputeMoments
 from object_data import ControlObject
 
 
-# TODO: Добавить учет отличия значений alpha, h, k в зависимости от канала
-# FIXME: Вектора в alpha, h, k ломают логику работы класса PhasePlane
 class MotionControlSystem:
     """
     Класс для хранения состояния системы управления
