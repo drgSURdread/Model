@@ -67,19 +67,20 @@ class MotionControlSystem:
             MotionControlSystem.k[
                 MotionControlSystem.index_channel_mapping[channel_name]
             ] = parameter_value
-        elif parameter_value == "h":
+        elif parameter_name == "h":
             MotionControlSystem.h[
                 MotionControlSystem.index_channel_mapping[channel_name]
             ] = parameter_value
-        elif parameter_value == "alpha":
+        elif parameter_name == "alpha":
             MotionControlSystem.alpha[
                 MotionControlSystem.index_channel_mapping[channel_name]
             ] = parameter_value
-        elif parameter_value == "g":
+        elif parameter_name == "g":
             MotionControlSystem.g[
-                MotionControlSystem.index_channel_mapping[channel_name]
+                MotionControlSystem.index_channel_mapping[channel_name],
+                0
             ] = parameter_value
-        elif parameter_value == "a":
+        elif parameter_name == "a":
             MotionControlSystem.a[
                 MotionControlSystem.index_channel_mapping[channel_name]
             ] = parameter_value

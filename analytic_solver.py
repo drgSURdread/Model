@@ -353,7 +353,7 @@ class AnalyticSolver:
         
         print("------------")
         # Пока не прошли по всему ПЦ
-        while not abs(curr_point[1] - curr_velocity) < 1e-6: # TODO: Добавить проверку через относительную погрешность
+        while not abs(curr_point[1] - curr_velocity) < 5e-7: # TODO: Добавить проверку через относительную погрешность
             curr_curve = self.phase_plane_obj.current_curve
             start_time_curve = ControlObject.time_points[-1]
 
