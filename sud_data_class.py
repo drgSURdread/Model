@@ -3,8 +3,6 @@ from calculate_moments import ComputeMoments
 from object_data import ControlObject
 
 
-# TODO: Добавить учет отличия значений alpha, h, k в зависимости от канала
-# FIXME: Вектора в alpha, h, k ломают логику работы класса PhasePlane
 class MotionControlSystem:
     """
     Класс для хранения состояния системы управления
@@ -62,6 +60,30 @@ class MotionControlSystem:
     period: float = 0.0 # Период ПЦ
     borehole: float = 0.0 # Скважность ПЦ
     count_impulse: float = 0 # Количество включений в ПЦ
+
+    @staticmethod
+    def set_parameter_value(channel_name: str, parameter_name: str, parameter_value) -> None:
+        if parameter_name == "k":
+            MotionControlSystem.k[
+                MotionControlSystem.index_channel_mapping[channel_name]
+            ] = parameter_value
+        elif parameter_name == "h":
+            MotionControlSystem.h[
+                MotionControlSystem.index_channel_mapping[channel_name]
+            ] = parameter_value
+        elif parameter_name == "alpha":
+            MotionControlSystem.alpha[
+                MotionControlSystem.index_channel_mapping[channel_name]
+            ] = parameter_value
+        elif parameter_name == "g":
+            MotionControlSystem.g[
+                MotionControlSystem.index_channel_mapping[channel_name],
+                0
+            ] = parameter_value
+        elif parameter_name == "a":
+            MotionControlSystem.a[
+                MotionControlSystem.index_channel_mapping[channel_name]
+            ] = parameter_value
 
     @staticmethod
     def set_g_effectiveness() -> None:

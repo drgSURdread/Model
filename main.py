@@ -17,11 +17,13 @@ import sys
 sys.path.append("initialization")
 
 import matplotlib.pyplot as plt
+import numpy as np
 import initialization.initial_data_class as initial
 from numerical_solver import NumericalSolver
 from analytic_solver import AnalyticSolver
 from sud_data_class import MotionControlSystem
 from object_data import ControlObject
+from energy_diagram import EnergyDiagram
 import time
 from calculate_moments import ComputeMoments
 
@@ -72,10 +74,34 @@ def analytic_solution(channel_name: str = "gamma", time_solve: float = 10.0):
 
 if __name__ == "__main__":
     start("initialization/DATA_REF.xlsx")
-    channel_name = "psi"
+    # Параметры для построения энергетической диаграммы
+    channel_name = "nu"                  # Название канала
+    # parameter_name = "k"                 # Название варьируемого параметра
+    # value_lst = np.linspace(1, 2, 30)   # Значения варьируемого параметра
+    parameter_name = "g"
+    value_lst = np.linspace(1e-9, 3e-9, 5)
+    NU_matrix = [                        # Набор начальных условий
+        np.array([0.0] * 2),
+        np.linspace(3e-6, 1e-3, 4)
+    ]
 
-    sol = analytic_solution(channel_name, time_solve=20000.0)
-    # print(ControlObject.y_L1)
-    sol.plot_phase_portrait(channel_name)
+    diagram = EnergyDiagram(
+        channel_name=channel_name,
+        parameter_name=parameter_name,
+        value_lst=value_lst,
+    )
+    start_time = time.time()
+    diagram.start(nu_matrix=NU_matrix, fast_solve=True)
+    print("Общее время работы: ", time.time() - start_time)
+    diagram.plot_diagram()
+    # MotionControlSystem.set_parameter_value(
+    #     channel_name,
+    #     parameter_name,
+    #     parameter_value=value_lst[0],
+    # )
+    # ControlObject.nu_angles = [NU_matrix[0][0]]
+    # ControlObject.nu_w = [NU_matrix[1][0]]
+    # sol = analytic_solution(channel_name, time_solve=20000.0)
+    # sol.plot_phase_portrait(channel_name)
     
     
