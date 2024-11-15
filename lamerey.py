@@ -5,25 +5,25 @@ from object_data import ControlObject
 from sud_data_class import MotionControlSystem
 
 class LamereyDiagram:
-    def __init__(self, channel_name: str, parameter_name: str, value_lst: list):
+    def __init__(self, channel_name: str):
         self.channel_name = channel_name
         self.results = dict()
 
         self.k = MotionControlSystem.k[
             MotionControlSystem.index_channel_mapping[self.channel_name]
-        ]
+        ][0]
         self.a = MotionControlSystem.a[
             MotionControlSystem.index_channel_mapping[self.channel_name]
-        ]
-        self.g = MotionControlSystem.a[
+        ][0]
+        self.g = MotionControlSystem.g[
             MotionControlSystem.index_channel_mapping[self.channel_name]
-        ]
-        self.h = MotionControlSystem.a[
+        ][0]
+        self.h = MotionControlSystem.h[
             MotionControlSystem.index_channel_mapping[self.channel_name]
-        ]
-        self.alpha = MotionControlSystem.a[
+        ][0]
+        self.alpha = MotionControlSystem.alpha[
             MotionControlSystem.index_channel_mapping[self.channel_name]
-        ]
+        ][0]
 
         # Константы для аналитических уравнений
         self.b = self.a - self.g
@@ -52,12 +52,14 @@ class LamereyDiagram:
         )
 
     def start(self, y_start: float) -> None:
-        while self.__check_end_solution(y_start):
-            self.y_values.append(y_start)
+        self.y_values.append(float(y_start))
+        y_start = self.__next_step(y_start)
+        while not(self.__check_end_solution(y_start)):
+            self.y_values.append(float(y_start))
             y_start = self.__next_step(y_start)
 
     def __check_end_solution(self, current_y: float) -> bool:
-        if abs(current_y - self.y_values) < 1e-7:
+        if abs(current_y - self.y_values[-1]) < 1e-7:
             return True
         return False
 
@@ -96,14 +98,17 @@ class LamereyDiagram:
     def plot_diagram(self, figure_size: tuple = (10, 8)):
         y_1, y_2 = self.__generate_data_points()
         points_x, points_y = self.__generate_plot_data(y_1, y_2)
-        borders = self.__get_borders(y_1, y_2)
+        borders = self.__get_borders(points_x, points_y)
         ax = self.__get_figure(figure_size)
+
+        rad_to_deg = lambda x: x * 180 / np.pi
+        
         ax.axis(
             [
-                borders["x"]["min"] - 0.3 * borders["x"]["min"],
-                borders["x"]["max"] + 0.1 * borders["x"]["max"],
-                borders["y"]["min"] - 0.3 * borders["y"]["min"],
-                borders["y"]["max"] + 0.1 * borders["y"]["max"]
+                rad_to_deg(borders["x"]["min"]) - 0.3 * borders["x"]["min"],
+                rad_to_deg(borders["x"]["max"]) + 0.1 * borders["x"]["max"],
+                rad_to_deg(borders["y"]["min"]) - 0.3 * borders["y"]["min"],
+                rad_to_deg(borders["y"]["max"]) + 0.1 * borders["y"]["max"]
             ]
         )
 
@@ -127,10 +132,10 @@ class LamereyDiagram:
         )
 
         plt.title("Диаграмма Ламерея")
-        plt.show()
+        # plt.show()
 
     def __generate_data_points(self):
-        return self.y_values[:len(self.y_values) - 2], self.y_values[1:]
+        return self.y_values[:len(self.y_values) - 1], self.y_values[1:]
     
     def __generate_plot_data(self, y_1: list, y_2: list):
         plot_line_points_x = [y_1[0]]
@@ -155,12 +160,12 @@ class LamereyDiagram:
         return {
             "x":
             {
-                "min": min(y_1, 0.0),
-                "max": max(y_1, 0.0)
+                "min": min(self.y_values),
+                "max": max(self.y_values)
             },
             "y":
             {
-                "min": min(y_2, 0.0),
-                "max": max(y_2, 0.0)
+                "min": min(self.y_values),
+                "max": max(self.y_values)
             }
         }

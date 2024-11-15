@@ -24,6 +24,7 @@ from analytic_solver import AnalyticSolver
 from sud_data_class import MotionControlSystem
 from object_data import ControlObject
 from energy_diagram import EnergyDiagram
+from lamerey import LamereyDiagram
 import time
 from calculate_moments import ComputeMoments
 
@@ -75,33 +76,39 @@ def analytic_solution(channel_name: str = "gamma", time_solve: float = 10.0):
 if __name__ == "__main__":
     start("initialization/DATA_REF.xlsx")
     # Параметры для построения энергетической диаграммы
-    channel_name = "nu"                  # Название канала
+    channel_name = "psi"                  # Название канала
     # parameter_name = "k"                 # Название варьируемого параметра
     # value_lst = np.linspace(1, 2, 30)   # Значения варьируемого параметра
-    parameter_name = "g"
-    value_lst = np.linspace(1e-9, 3e-9, 5)
-    NU_matrix = [                        # Набор начальных условий
-        np.array([0.0] * 2),
-        np.linspace(3e-6, 1e-3, 4)
-    ]
+    # parameter_name = "g"
+    # value_lst = np.linspace(1e-9, 3e-9, 5)
+    # NU_matrix = [                        # Набор начальных условий
+    #     np.array([0.0] * 2),
+    #     np.linspace(3e-6, 1e-3, 4)
+    # ]
 
-    diagram = EnergyDiagram(
-        channel_name=channel_name,
-        parameter_name=parameter_name,
-        value_lst=value_lst,
-    )
-    start_time = time.time()
-    diagram.start(nu_matrix=NU_matrix, fast_solve=True)
-    print("Общее время работы: ", time.time() - start_time)
-    diagram.plot_diagram()
+    # diagram = EnergyDiagram(
+    #     channel_name=channel_name,
+    #     parameter_name=parameter_name,
+    #     value_lst=value_lst,
+    # )
+    # start_time = time.time()
+    # diagram.start(nu_matrix=NU_matrix, fast_solve=True)
+    # print("Общее время работы: ", time.time() - start_time)
+    # diagram.plot_diagram()
     # MotionControlSystem.set_parameter_value(
     #     channel_name,
     #     parameter_name,
     #     parameter_value=value_lst[0],
     # )
-    # ControlObject.nu_angles = [NU_matrix[0][0]]
-    # ControlObject.nu_w = [NU_matrix[1][0]]
+    ControlObject.nu_angles = [0.0]
+    ControlObject.nu_w = [0.001]
     # sol = analytic_solution(channel_name, time_solve=20000.0)
     # sol.plot_phase_portrait(channel_name)
+    # plt.show()
+    diagram = LamereyDiagram(channel_name)
+    diagram.start(0.001)
+    diagram.plot_diagram()
+    plt.show()
+    
     
     
