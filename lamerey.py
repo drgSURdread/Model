@@ -35,7 +35,6 @@ class LamereyDiagram:
 
         self.__calculate_boundary_points()
 
-        self.count_steps = 0 # Количество пройденных кривых
         self.y_values = []
 
     def __calculate_boundary_points(self) -> None:
@@ -55,7 +54,6 @@ class LamereyDiagram:
     def start(self, y_start: float) -> None:
         while self.__check_end_solution():
             y_start = self.__next_step(y_start)
-            self.count_steps += 1
 
     def __check_end_solution(self) -> bool:
         pass
@@ -91,3 +89,23 @@ class LamereyDiagram:
         return -self.g * self.k + np.sqrt(
             (y4 + self.g * self.k)**2 + 2 * self.g * (self.e1 - self.e4)
         )
+    
+    def plot_diagram(self):
+        pass
+
+    def __generate_data_points(self):
+        return self.y_values[:len(self.y_values) - 2], self.y_values[1:]
+    
+    def __generate_plot_data(self, y_1: list, y_2: list):
+        plot_line_points_x = [y_1[0]]
+        plot_line_points_y = [y_2[0]]
+        for i in range(1, len(y_1)):
+            # Точка на биссектрисе
+            plot_line_points_x.append(y_1[i])
+            plot_line_points_y.append(y_1[i])
+            # Точка вне биссектрисы
+            plot_line_points_x.append(y_1[i])
+            plot_line_points_y.append(y_2[i])
+        return plot_line_points_x, plot_line_points_y
+
+        
