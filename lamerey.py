@@ -35,6 +35,9 @@ class LamereyDiagram:
 
         self.__calculate_boundary_points()
 
+        self.count_steps = 0 # Количество пройденных кривых
+        self.y_values = []
+
     def __calculate_boundary_points(self) -> None:
         self.y_min_bound_point = (
             self.k * (self.a - self.g) - np.sqrt(
@@ -50,7 +53,41 @@ class LamereyDiagram:
         )
 
     def start(self, y_start: float) -> None:
+        while self.__check_end_solution():
+            y_start = self.__next_step(y_start)
+            self.count_steps += 1
+
+    def __check_end_solution(self) -> bool:
         pass
+
+    def __next_step(self, current_y: float) -> float:
+        self.y_values.append(current_y)
+        if self.y_min_bound_point < current_y < self.y_max_bound_point:
+            next_y = self.__T1_function(current_y)
+        else:
+            next_y = self.__T2_function(current_y)
+        return next_y
     
-    def __next_step(self):
-        pass
+    def __T1_function(self, current_y: float) -> float:
+        y2 = self.b * self.k - np.sqrt(
+            (
+                current_y - self.b * self.k)**2 + \
+                2 * self.b * (self.e1 - self.e2)
+            )
+        return -self.g * self.k + np.sqrt(
+            (y2 + self.g * self.k)**2 + 2 * self.g * (self.e1 - self.e2)
+        )
+
+    def __T2_function(self, current_y: float) -> float:
+        y2 = self.b * self.k - np.sqrt(
+            (current_y - self.b * self.k)**2 + 2 * self.b * (self.e1 - self.e2)
+        )
+        y3 = -self.g * self.k - np.sqrt(
+            (y2 + self.g * self.k)**2 + 2 * self.g * (self.e3 - self.e2)
+        )
+        y4 = -self.d * self.k + np.sqrt(
+            (y3 + self.d * self.k)**2 + 2 * self.d * (self.e4 - self.e3)
+        )
+        return -self.g * self.k + np.sqrt(
+            (y4 + self.g * self.k)**2 + 2 * self.g * (self.e1 - self.e4)
+        )
