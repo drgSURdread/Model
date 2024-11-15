@@ -52,11 +52,14 @@ class LamereyDiagram:
         )
 
     def start(self, y_start: float) -> None:
-        while self.__check_end_solution():
+        while self.__check_end_solution(y_start):
+            self.y_values.append(y_start)
             y_start = self.__next_step(y_start)
 
-    def __check_end_solution(self) -> bool:
-        pass
+    def __check_end_solution(self, current_y: float) -> bool:
+        if abs(current_y - self.y_values) < 1e-7:
+            return True
+        return False
 
     def __next_step(self, current_y: float) -> float:
         self.y_values.append(current_y)
