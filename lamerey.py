@@ -93,8 +93,41 @@ class LamereyDiagram:
             (y4 + self.g * self.k)**2 + 2 * self.g * (self.e1 - self.e4)
         )
     
-    def plot_diagram(self):
-        pass
+    def plot_diagram(self, figure_size: tuple = (10, 8)):
+        y_1, y_2 = self.__generate_data_points()
+        points_x, points_y = self.__generate_plot_data(y_1, y_2)
+        borders = self.__get_borders(y_1, y_2)
+        ax = self.__get_figure(figure_size)
+        ax.axis(
+            [
+                borders["x"]["min"] - 0.3 * borders["x"]["min"],
+                borders["x"]["max"] + 0.1 * borders["x"]["max"],
+                borders["y"]["min"] - 0.3 * borders["y"]["min"],
+                borders["y"]["max"] + 0.1 * borders["y"]["max"]
+            ]
+        )
+
+        # Биссектриса
+        ax.plot(
+            np.linspace(borders["x"]["min"], borders["x"]["max"], 2),
+            np.linspace(borders["x"]["min"], borders["x"]["max"], 2),
+            color='g'
+        )
+        
+        rad_to_deg = lambda x: x * 180 / np.pi
+
+        # Точки и линии через биссектрису
+        ax.scatter(
+            list(map(rad_to_deg, y_1)), 
+            list(map(rad_to_deg, y_2))
+        )
+        ax.plot(
+            list(map(rad_to_deg, points_x)), 
+            list(map(rad_to_deg, points_y))
+        )
+
+        plt.title("Диаграмма Ламерея")
+        plt.show()
 
     def __generate_data_points(self):
         return self.y_values[:len(self.y_values) - 2], self.y_values[1:]
@@ -110,5 +143,24 @@ class LamereyDiagram:
             plot_line_points_x.append(y_1[i])
             plot_line_points_y.append(y_2[i])
         return plot_line_points_x, plot_line_points_y
-
-        
+    
+    def __get_figure(self, figure_size: tuple = (10, 8)) -> plt.Axes:
+        fig, ax = plt.subplots(figsize=figure_size, layout="tight")
+        ax.grid(True)
+        plt.xlabel("Y, град./c", fontsize=14, fontweight="bold")
+        plt.ylabel("Y', град./c", fontsize=14, fontweight="bold")
+        return ax
+    
+    def __get_borders(self, y_1: list, y_2: list) -> dict:
+        return {
+            "x":
+            {
+                "min": min(y_1, 0.0),
+                "max": max(y_1, 0.0)
+            },
+            "y":
+            {
+                "min": min(y_2, 0.0),
+                "max": max(y_2, 0.0)
+            }
+        }
