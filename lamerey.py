@@ -36,6 +36,7 @@ class LamereyDiagram:
         self.__calculate_boundary_points()
 
         self.y_values = []
+        self.type_function_lst = [] # Хранит типы функций последования применяющиеся на данном шаге
 
     def __calculate_boundary_points(self) -> None:
         self.y_min_bound_point = (
@@ -51,25 +52,35 @@ class LamereyDiagram:
             2 * self.alpha - self.h)))**2 - 2 * self.h * (self.a - self.g))
         )
 
-    def start(self, y_start: float) -> None:
+    def start(self, y_start: float) -> int:
         self.y_values.append(float(y_start))
-        y_start = self.__next_step(y_start)
+        self.type_function_lst.append(None)
+        y_start, type_function = self.__next_step(y_start)
         while not(self.__check_end_solution(y_start)):
             self.y_values.append(float(y_start))
-            y_start = self.__next_step(y_start)
+            self.type_function_lst.append(type_function)
+            y_start, type_function = self.__next_step(y_start)
+        
+        sum_count_impulse = 0
+        for type_func in self.type_function_lst[self.find_index:]:
+            sum_count_impulse += int(type_func[1])
+        return sum_count_impulse
+
 
     def __check_end_solution(self, current_y: float) -> bool:
-        if abs(current_y - self.y_values[-1]) < 1e-7:
+        if np.any(np.abs(np.array(self.y_values) - current_y) < 1e-7):
+            self.find_index = np.where(np.abs(np.array(self.y_values) - current_y) < 1e-7)[0][0]
             return True
         return False
 
-    def __next_step(self, current_y: float) -> float:
-        self.y_values.append(current_y)
+    def __next_step(self, current_y: float) -> tuple:
         if self.y_min_bound_point < current_y < self.y_max_bound_point:
             next_y = self.__T1_function(current_y)
+            type_function = "T1"
         else:
             next_y = self.__T2_function(current_y)
-        return next_y
+            type_function = "T2"
+        return next_y, type_function
     
     def __T1_function(self, current_y: float) -> float:
         y2 = self.b * self.k - np.sqrt(

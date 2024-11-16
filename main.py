@@ -76,9 +76,9 @@ def analytic_solution(channel_name: str = "gamma", time_solve: float = 10.0):
 if __name__ == "__main__":
     start("initialization/DATA_REF.xlsx")
     # Параметры для построения энергетической диаграммы
-    channel_name = "psi"                  # Название канала
-    # parameter_name = "k"                 # Название варьируемого параметра
-    # value_lst = np.linspace(1, 2, 30)   # Значения варьируемого параметра
+    channel_name = "nu"                  # Название канала
+    parameter_name = "k"                 # Название варьируемого параметра
+    value_lst = np.linspace(1.5, 2, 30)   # Значения варьируемого параметра
     # parameter_name = "g"
     # value_lst = np.linspace(1e-9, 3e-9, 5)
     # NU_matrix = [                        # Набор начальных условий
@@ -95,11 +95,11 @@ if __name__ == "__main__":
     # diagram.start(nu_matrix=NU_matrix, fast_solve=True)
     # print("Общее время работы: ", time.time() - start_time)
     # diagram.plot_diagram()
-    # MotionControlSystem.set_parameter_value(
-    #     channel_name,
-    #     parameter_name,
-    #     parameter_value=value_lst[0],
-    # )
+    MotionControlSystem.set_parameter_value(
+        channel_name,
+        parameter_name,
+        parameter_value=value_lst[0],
+    )
     ControlObject.nu_angles = [0.0]
     ControlObject.nu_w = [0.001]
     # sol = analytic_solution(channel_name, time_solve=20000.0)
@@ -107,8 +107,8 @@ if __name__ == "__main__":
     # plt.show()
     diagram = LamereyDiagram(channel_name)
     diagram.start(0.001)
-    diagram.plot_diagram()
-    plt.show()
+    # diagram.plot_diagram()
+    # plt.show()
     
     
     
