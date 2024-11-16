@@ -558,7 +558,7 @@ class AnalyticSolver:
             color="red",
         )
         # plt.savefig("dz/phase_portrait/src")
-        plt.show()
+        # plt.show()
 
     def plot_x_oscillogram(self, channel_name: str) -> None:
         """
