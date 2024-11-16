@@ -121,7 +121,7 @@ class EnergyDiagram:
                     linewidth=3,
                 )
         ax.legend(fontsize=14)
-        plt.show()
+        # plt.show()
 
     def __get_figure(self, figure_size: tuple = (10, 8)) -> plt.Axes:
         """
@@ -138,9 +138,6 @@ class EnergyDiagram:
             Объект фигуры
         """
         fig, ax = plt.subplots(figsize=figure_size, layout="tight")
-        # ax.grid(which="major", color="#DDDDDD", linewidth=1.5)
-        # ax.grid(which="minor", color="#EEEEEE", linestyle=":", linewidth=1)
-        # ax.minorticks_on()
         ax.grid(True)
         return ax
 

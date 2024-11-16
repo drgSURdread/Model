@@ -73,42 +73,58 @@ def analytic_solution(channel_name: str = "gamma", time_solve: float = 10.0):
     print("Время выполнения", time.time() - start_time)
     return sol
 
+def lamerey_diagram(channel_name: str, y_start: float) -> None:
+    if channel_name == "nu":
+        ControlObject.nu_angles = [0.0]
+        ControlObject.nu_w = [y_start]
+    elif channel_name == "psi":
+        ControlObject.psi_angles = [0.0]
+        ControlObject.psi_w = [y_start]
+    else:
+        ControlObject.gamma_angles = [0.0]
+        ControlObject.gamma_w = [y_start]
+    diagram = LamereyDiagram(channel_name)
+    diagram.start(y_start)
+    diagram.plot_diagram()
+
+def energy_diagram(channel_name: str, parameter_name: str, value_lst: list, NU_matrix: list) -> None:
+    diagram = EnergyDiagram(
+        channel_name=channel_name,
+        parameter_name=parameter_name,
+        value_lst=value_lst,
+    )
+    start_time = time.time()
+    diagram.start(nu_matrix=NU_matrix, fast_solve=True)
+    print("Общее время построения диаграммы скважности: ", time.time() - start_time)
+    diagram.plot_diagram()
+
 if __name__ == "__main__":
     start("initialization/DATA_REF.xlsx")
     # Параметры для построения энергетической диаграммы
     channel_name = "nu"                  # Название канала
     parameter_name = "k"                 # Название варьируемого параметра
     value_lst = np.linspace(1.5, 2, 30)   # Значения варьируемого параметра
-    # parameter_name = "g"
-    # value_lst = np.linspace(1e-9, 3e-9, 5)
-    # NU_matrix = [                        # Набор начальных условий
-    #     np.array([0.0] * 2),
-    #     np.linspace(3e-6, 1e-3, 4)
-    # ]
+    NU_matrix = [                        # Набор начальных условий
+        np.array([0.0] * 2),
+        np.linspace(3e-6, 1e-3, 4)
+    ]
 
-    # diagram = EnergyDiagram(
-    #     channel_name=channel_name,
-    #     parameter_name=parameter_name,
-    #     value_lst=value_lst,
-    # )
-    # start_time = time.time()
-    # diagram.start(nu_matrix=NU_matrix, fast_solve=True)
-    # print("Общее время работы: ", time.time() - start_time)
-    # diagram.plot_diagram()
-    MotionControlSystem.set_parameter_value(
+    energy_diagram(
         channel_name,
         parameter_name,
-        parameter_value=value_lst[0],
+        value_lst,
+        NU_matrix
     )
-    ControlObject.nu_angles = [0.0]
-    ControlObject.nu_w = [0.001]
+    # MotionControlSystem.set_parameter_value(
+    #     channel_name,
+    #     parameter_name,
+    #     parameter_value=value_lst[0],
+    # )
+    # ControlObject.nu_angles = [0.0]
+    # ControlObject.nu_w = [0.001]
     # sol = analytic_solution(channel_name, time_solve=20000.0)
     # sol.plot_phase_portrait(channel_name)
-    # plt.show()
-    diagram = LamereyDiagram(channel_name)
-    diagram.start(0.001)
-    # diagram.plot_diagram()
-    # plt.show()
+    plt.show()
     
     
     
