@@ -52,7 +52,7 @@ class LamereyDiagram:
             2 * self.alpha - self.h)))**2 - 2 * self.h * (self.a - self.g))
         )
 
-    def start(self, y_start: float) -> int:
+    def start(self, y_start: float) -> tuple[int, dict]:
         self.y_values.append(float(y_start))
         self.type_function_lst.append(None)
         y_start, type_function = self.__next_step(y_start)
@@ -64,8 +64,33 @@ class LamereyDiagram:
         sum_count_impulse = 0
         for type_func in self.type_function_lst[self.find_index:]:
             sum_count_impulse += int(type_func[1])
-        return sum_count_impulse
+        cycle_characteristic = self.__calculate_cycle_characteristics()
+        
+        return sum_count_impulse, cycle_characteristic
+    
+    def __calculate_cycle_characteristics(self):
+        point_x = self.alpha - self.k * self.y_values[-1]
+        self.__set_start_point(
+            start_point=(point_x, self.y_values[-1])
+        )
+        sol = AnalyticSolver(self.channel_name)
+        sol.solve(time_solve=50000.0, dt_max=0.1)
+        return {
+            "borehole": MotionControlSystem.borehole,
+            "period": MotionControlSystem.period,
+        }
 
+
+    def __set_start_point(self, start_point: tuple) -> None:
+        if self.channel_name == "nu":
+            ControlObject.nu_angles = [start_point[0]]
+            ControlObject.nu_w = [start_point[1]]
+        elif self.channel_name == "psi":
+            ControlObject.psi_angles = [start_point[0]]
+            ControlObject.psi_w = [start_point[1]]
+        else:
+            ControlObject.gamma_angles = [start_point[0]]
+            ControlObject.gamma_w = [start_point[1]]
 
     def __check_end_solution(self, current_y: float) -> bool:
         if np.any(np.abs(np.array(self.y_values) - current_y) < 1e-7):

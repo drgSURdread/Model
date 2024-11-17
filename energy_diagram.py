@@ -3,6 +3,7 @@ import numpy as np
 from analytic_solver import AnalyticSolver
 from object_data import ControlObject
 from sud_data_class import MotionControlSystem
+from lamerey import LamereyDiagram
 
 class EnergyDiagram:
     def __init__(self, channel_name: str, parameter_name: str, value_lst: list):
@@ -15,6 +16,33 @@ class EnergyDiagram:
         self.cycles = dict() # Хранит найденные на текущей итерации ПЦ
     
     def start(self, nu_matrix: np.ndarray, fast_solve: bool = False) -> None:
+        pass
+
+    def __solution_used_lamerey(self, nu_matrix: list) -> None:
+        for param_value in self.value_lst:
+            self.cycles = dict()
+            MotionControlSystem.set_parameter_value(
+                self.channel_name,
+                self.parameter_name,
+                param_value,
+            )
+            for velocity_start in nu_matrix[1]:
+                MotionControlSystem.borehole = 0.0
+                MotionControlSystem.count_impulse = 0
+                MotionControlSystem.period = 0.0
+                print("Начинаем движение из точки ({}, {})".format(0.0, velocity_start * 180 / np.pi))
+                self.__set_zero_lst_to_control_object(
+                        nu=(0.0, velocity_start)
+                )
+                diagram = LamereyDiagram(self.channel_name)
+                count_impulse, cycle_parameters = diagram.start(velocity_start)
+                self.__save_cycles_parameters(
+                    parameter_value=param_value,
+                    nu=(0.0, velocity_start)
+                )
+            self.__save_results()
+
+    def __iterate_solution(self, nu_matrix: list) -> None:
         """
         Перебираем НУ в квадрате со сторонами [angle_min, angle_max] и [velocity_min, velocity_max]
         """
@@ -40,17 +68,17 @@ class EnergyDiagram:
                     
                     sol = AnalyticSolver(self.channel_name)
                     sol.solve(time_solve=50000.0, dt_max=0.1)
-                    if fast_solve and MotionControlSystem.period != 0.0:
+                    if MotionControlSystem.period != 0.0:
                         flag_save = True
                         self.__save_cycles_parameters(param_value, nu=(angle_start, velocity_start))
                         break
-                if fast_solve and flag_save:
+                if flag_save:
                     break
             self.__save_results()
-            print(
-                "Для {} = {}".format(self.parameter_name, param_value), 
-                self.results
-            )
+            # print(
+            #     "Для {} = {}".format(self.parameter_name, param_value), 
+            #     self.results
+            # )
 
     def __set_zero_lst_to_control_object(self, nu: tuple) -> None:
         if self.channel_name == "nu":
