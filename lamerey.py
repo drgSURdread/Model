@@ -74,7 +74,7 @@ class LamereyDiagram:
             start_point=(point_x, self.y_values[-1])
         )
         sol = AnalyticSolver(self.channel_name)
-        sol.solve(time_solve=50000.0, dt_max=0.1)
+        sol.solve(time_solve=10000.0, dt_max=0.1)
         return {
             "borehole": MotionControlSystem.borehole,
             "period": MotionControlSystem.period,

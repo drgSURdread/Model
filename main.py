@@ -109,12 +109,17 @@ if __name__ == "__main__":
         np.linspace(3e-6, 1e-3, 4)
     ]
 
-    energy_diagram(
+    diagram = EnergyDiagram(
         channel_name,
         parameter_name,
         value_lst,
-        NU_matrix
     )
+    diagram.start(
+        NU_matrix,
+        used_lamerey=True,
+    )
+    diagram.plot_diagram()
+
     # MotionControlSystem.set_parameter_value(
     #     channel_name,
     #     parameter_name,
