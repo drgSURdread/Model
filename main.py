@@ -100,10 +100,11 @@ def energy_diagram(channel_name: str, parameter_name: str, value_lst: list, NU_m
 
 if __name__ == "__main__":
     start("initialization/DATA_REF.xlsx")
+    # print(MotionControlSystem.g)
     # Параметры для построения энергетической диаграммы
     channel_name = "nu"                  # Название канала
-    parameter_name = "k"                 # Название варьируемого параметра
-    value_lst = np.linspace(1, 6, 30)   # Значения варьируемого параметра
+    parameter_name = "g"                 # Название варьируемого параметра
+    value_lst = np.linspace(6e-10, 8e-9, 70)   # Значения варьируемого параметра
     NU_matrix = [                        # Набор начальных условий
         np.array([0.0] * 2),
         np.linspace(3e-8, 1e-5, 4)

@@ -89,6 +89,7 @@ class LamereyDiagram:
             sol.solve( # Делаем шаг в виде одной кривой
                 step_solver=True,
                 check_cycle=False,
+                dt_max=0.1,
             )
             time_for_curve = ControlObject.time_points[-1] - start_time_curve
             if sol.phase_plane_obj.current_curve == "G0" or sol.phase_plane_obj.current_curve == "G0":
