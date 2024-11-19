@@ -64,7 +64,9 @@ class LamereyDiagram:
         sum_count_impulse = 0
         for type_func in self.type_function_lst[self.find_index:]:
             sum_count_impulse += int(type_func[1])
-        print(sum_count_impulse)
+        # Иногда дублируются найденные циклы из-за точности
+        if len(self.type_function_lst[self.find_index:]) % 2 == 0:
+            sum_count_impulse //= 2
         cycle_characteristic = self.__calculate_cycle_characteristics()
         
         return sum_count_impulse, cycle_characteristic
@@ -117,8 +119,8 @@ class LamereyDiagram:
             ControlObject.gamma_w = [start_point[1]]
 
     def __check_end_solution(self, current_y: float) -> bool:
-        if np.any(np.abs(np.array(self.y_values) - current_y) < 1e-7):
-            self.find_index = np.where(np.abs(np.array(self.y_values) - current_y) < 1e-7)[0][0]
+        if np.any(np.abs(np.array(self.y_values) - current_y) < 1e-12):
+            self.find_index = np.where(np.abs(np.array(self.y_values) - current_y) < 1e-12)[0][-1]
             return True
         return False
 
