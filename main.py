@@ -103,22 +103,28 @@ if __name__ == "__main__":
     # Параметры для построения энергетической диаграммы
     channel_name = "nu"                  # Название канала
     parameter_name = "k"                 # Название варьируемого параметра
-    value_lst = np.linspace(1.5, 2, 30)   # Значения варьируемого параметра
+    value_lst = np.linspace(3, 6, 10)   # Значения варьируемого параметра
     NU_matrix = [                        # Набор начальных условий
         np.array([0.0] * 2),
-        np.linspace(3e-6, 1e-3, 4)
+        np.linspace(3e-8, 1e-7, 4)
     ]
-
-    diagram = EnergyDiagram(
+    MotionControlSystem.set_parameter_value(
         channel_name,
         parameter_name,
-        value_lst,
+        parameter_value=value_lst[0],
     )
-    diagram.start(
-        NU_matrix,
-        used_lamerey=True,
-    )
-    diagram.plot_diagram()
+    lamerey_diagram(channel_name, NU_matrix[1][1])
+
+    # diagram = EnergyDiagram(
+    #     channel_name,
+    #     parameter_name,
+    #     value_lst,
+    # )
+    # diagram.start(
+    #     NU_matrix,
+    #     used_lamerey=True,
+    # )
+    # diagram.plot_diagram()
 
     # MotionControlSystem.set_parameter_value(
     #     channel_name,
