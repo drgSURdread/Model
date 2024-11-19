@@ -29,11 +29,12 @@ class AnalyticSolver:
     def __init__(
         self,
         control_channel: str = "nu",
+        used_lamerey: bool = False,
     ):
         self.phase_plane_obj = PhasePlane()
 
         self.__check_valid_control_channel(control_channel)
-        self.__init_position()
+        self.__init_position(used_lamerey)
 
     def __check_valid_control_channel(self, control_channel: str) -> None:
         """
@@ -49,7 +50,7 @@ class AnalyticSolver:
         else:
             raise ValueError("control_channel not in {nu, psi, gamma}")
 
-    def __init_position(self) -> None:
+    def __init_position(self, used_lamerey: bool = False) -> None:
         """
         Инициализирует лист на фазовой плоскости для начальных условий
 
@@ -58,6 +59,10 @@ class AnalyticSolver:
         nu : tuple
             Начальные условия (угол, скорость)
         """
+        if used_lamerey:
+            self.phase_plane_obj.current_curve = "G+"
+            self.phase_plane_obj.channel_name = self.control_channel
+            return
 
         angle_point = ControlObject.get_angle_value_in_channel(self.control_channel)
         velocity_point = ControlObject.get_velocity_value_in_channel(
@@ -106,7 +111,7 @@ class AnalyticSolver:
 
     def solve(
         self, dt_max: float = 0.01, tolerance: float = 2e-8, count_steps: int = 1, step_solver: bool = False,
-        time_solve: float = 10.0
+        time_solve: float = 10.0, check_cycle: bool = True
     ) -> None:
         """
         Функция решения. Решение производится в count_steps шагов.
@@ -136,6 +141,7 @@ class AnalyticSolver:
                 dt_max=dt_max,
                 tolerance=tolerance,
                 count_steps=count_steps,
+                check_cycle=check_cycle,
             )
         else:
             self.__continuous_solver(

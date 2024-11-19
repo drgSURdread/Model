@@ -52,7 +52,7 @@ class LamereyDiagram:
             2 * self.alpha - self.h)))**2 - 2 * self.h * (self.a - self.g))
         )
 
-    def start(self, y_start: float) -> int:
+    def start(self, y_start: float) -> tuple[int, dict]:
         self.y_values.append(float(y_start))
         self.type_function_lst.append(None)
         y_start, type_function = self.__next_step(y_start)
@@ -64,12 +64,64 @@ class LamereyDiagram:
         sum_count_impulse = 0
         for type_func in self.type_function_lst[self.find_index:]:
             sum_count_impulse += int(type_func[1])
-        return sum_count_impulse
+        # Иногда дублируются найденные циклы из-за точности
+        if len(self.type_function_lst[self.find_index:]) % 2 == 0:
+            sum_count_impulse //= 2
+        cycle_characteristic = self.__calculate_cycle_characteristics()
+        
+        return sum_count_impulse, cycle_characteristic
+    
+    def __calculate_cycle_characteristics(self):
+        point_x = self.alpha - self.k * self.y_values[-1]
+        self.__set_start_point(
+            start_point=(point_x, self.y_values[-1])
+        )
+        sum_time_impulse = 0.0
+        period = 0.0
+        count_impulse = 0
+        sol = AnalyticSolver(self.channel_name, used_lamerey=True)
+        first_true = True # TODO: Исправить этот костыль
+        while abs(
+            ControlObject.get_velocity_value_in_channel(self.channel_name) - self.y_values[-1]
+            ) > 1e-7 or first_true:
+            first_true = False
+            start_time_curve = ControlObject.time_points[-1]
+            sol.solve( # Делаем шаг в виде одной кривой
+                step_solver=True,
+                check_cycle=False,
+                dt_max=0.1,
+            )
+            time_for_curve = ControlObject.time_points[-1] - start_time_curve
+            if sol.phase_plane_obj.current_curve == "G0" or sol.phase_plane_obj.current_curve == "G0":
+                sum_time_impulse += time_for_curve
+                count_impulse += 1
+            period += time_for_curve
 
+        MotionControlSystem.borehole = sum_time_impulse / period
+        MotionControlSystem.period = period
+        MotionControlSystem.count_impulse = count_impulse
+        print("Методом диаграммы Ламерея рассчитали следующие параметры ПЦ")
+        print("Скважность: ", MotionControlSystem.borehole)
+        print("Период: ", MotionControlSystem.period)
+        return {
+            "borehole": MotionControlSystem.borehole,
+            "period": MotionControlSystem.period,
+        }
+
+    def __set_start_point(self, start_point: tuple) -> None:
+        if self.channel_name == "nu":
+            ControlObject.nu_angles = [start_point[0]]
+            ControlObject.nu_w = [start_point[1]]
+        elif self.channel_name == "psi":
+            ControlObject.psi_angles = [start_point[0]]
+            ControlObject.psi_w = [start_point[1]]
+        else:
+            ControlObject.gamma_angles = [start_point[0]]
+            ControlObject.gamma_w = [start_point[1]]
 
     def __check_end_solution(self, current_y: float) -> bool:
-        if np.any(np.abs(np.array(self.y_values) - current_y) < 1e-7):
-            self.find_index = np.where(np.abs(np.array(self.y_values) - current_y) < 1e-7)[0][0]
+        if np.any(np.abs(np.array(self.y_values) - current_y) < 1e-12):
+            self.find_index = np.where(np.abs(np.array(self.y_values) - current_y) < 1e-12)[0][-1]
             return True
         return False
 
@@ -125,8 +177,8 @@ class LamereyDiagram:
 
         # Биссектриса
         ax.plot(
-            np.linspace(borders["x"]["min"], borders["x"]["max"], 2),
-            np.linspace(borders["x"]["min"], borders["x"]["max"], 2),
+            np.linspace(rad_to_deg(borders["x"]["min"]), rad_to_deg(borders["x"]["max"]), 2),
+            np.linspace(rad_to_deg(borders["x"]["min"]), rad_to_deg(borders["x"]["max"]), 2),
             color='g'
         )
         
