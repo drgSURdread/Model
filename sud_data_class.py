@@ -59,7 +59,11 @@ class MotionControlSystem:
 
     period: float = 0.0 # Период ПЦ
     borehole: float = 0.0 # Скважность ПЦ
-    count_impulse: float = 0 # Количество включений в ПЦ
+    count_impulse: int = 0 # Количество включений в ПЦ
+    power: float = 0.0 # Средняя потребляемая мощность за один предельный цикл
+
+    P_max: float = 0.0 # Максимальная потребляемая мощность органом СУД
+    P_const: float = 0.0 # Потребляемая мощность органом СУД в установившемся режиме
 
     @staticmethod
     def set_parameter_value(channel_name: str, parameter_name: str, parameter_value) -> None:

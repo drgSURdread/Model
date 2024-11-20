@@ -87,14 +87,29 @@ def lamerey_diagram(channel_name: str, y_start: float) -> None:
     diagram.start(y_start)
     diagram.plot_diagram()
 
-def energy_diagram(channel_name: str, parameter_name: str, value_lst: list, NU_matrix: list) -> None:
+def energy_diagram(
+        channel_name: str, 
+        parameter_name: str, 
+        value_lst: list, 
+        NU_matrix: list,
+        P_max: float = 0.0,
+        P_const: float = 0.0
+    ) -> None:
+    MotionControlSystem.set_parameter_value(
+        channel_name,
+        parameter_name,
+        parameter_value=value_lst[0],
+    )
+    
     diagram = EnergyDiagram(
         channel_name=channel_name,
         parameter_name=parameter_name,
         value_lst=value_lst,
+        P_max=P_max,
+        P_const=P_const,
     )
     start_time = time.time()
-    diagram.start(nu_matrix=NU_matrix, fast_solve=True)
+    diagram.start(nu_matrix=NU_matrix, used_lamerey=True)
     print("Общее время построения диаграммы скважности: ", time.time() - start_time)
     diagram.plot_diagram()
 
@@ -104,29 +119,14 @@ if __name__ == "__main__":
     # Параметры для построения энергетической диаграммы
     channel_name = "nu"                  # Название канала
     parameter_name = "g"                 # Название варьируемого параметра
-    value_lst = np.linspace(6e-10, 8e-9, 70)   # Значения варьируемого параметра
+    value_lst = np.linspace(6e-10, 8e-9, 20)   # Значения варьируемого параметра
     NU_matrix = [                        # Набор начальных условий
         np.array([0.0] * 2),
         np.linspace(3e-8, 1e-5, 4)
     ]
-    MotionControlSystem.set_parameter_value(
-        channel_name,
-        parameter_name,
-        parameter_value=value_lst[0],
-    )
+    
     # lamerey_diagram(channel_name, NU_matrix[1][1])
-    time_start = time.time()
-    diagram = EnergyDiagram(
-        channel_name,
-        parameter_name,
-        value_lst,
-    )
-    diagram.start(
-        NU_matrix,
-        used_lamerey=True,
-    )
-    print("Время выполнения: ", time.time() - time_start)
-    diagram.plot_diagram()
+    energy_diagram(channel_name, parameter_name, value_lst, NU_matrix, P_max=15, P_const=3)
 
     # MotionControlSystem.set_parameter_value(
     #     channel_name,

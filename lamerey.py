@@ -79,6 +79,7 @@ class LamereyDiagram:
         sum_time_impulse = 0.0
         period = 0.0
         count_impulse = 0
+        sum_power = 0.0
         sol = AnalyticSolver(self.channel_name, used_lamerey=True)
         first_true = True # TODO: Исправить этот костыль
         while abs(
@@ -95,14 +96,19 @@ class LamereyDiagram:
             if sol.phase_plane_obj.current_curve == "G0" or sol.phase_plane_obj.current_curve == "G0":
                 sum_time_impulse += time_for_curve
                 count_impulse += 1
+                sum_power += MotionControlSystem.P_max * time_for_curve
+            else:
+                sum_power += MotionControlSystem.P_const * time_for_curve
             period += time_for_curve
 
         MotionControlSystem.borehole = sum_time_impulse / period
         MotionControlSystem.period = period
         MotionControlSystem.count_impulse = count_impulse
+        MotionControlSystem.power = sum_power / period
         print("Методом диаграммы Ламерея рассчитали следующие параметры ПЦ")
         print("Скважность: ", MotionControlSystem.borehole)
         print("Период: ", MotionControlSystem.period)
+        print("Потребляемая мощность: ", MotionControlSystem.power)
         return {
             "borehole": MotionControlSystem.borehole,
             "period": MotionControlSystem.period,
