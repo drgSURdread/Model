@@ -296,7 +296,7 @@ class NonLinearLamereyDiagram(LamereyDiagram):
     def __calculate_boundary_points_on_line_3(self):
         a = -self.k * (self.a + self.g)
         b = np.sqrt(
-            (self.a + self.g) * (2 * self.h + self.k**2 * (self.a + self.g)) - \
+            (self.a + self.g) * (-2 * self.h + self.k**2 * (self.a + self.g)) - \
             2 * (self.a + self.g) * self.k * self.beta + self.beta**2
         )
         # Граница для скользящего режима на L3
@@ -333,10 +333,93 @@ class NonLinearLamereyDiagram(LamereyDiagram):
         return sum_count_impulse, cycle_characteristic
     
     def __next_step(self, current_y: float) -> tuple:
-        if self.y_min_bound_point < current_y < self.y_max_bound_point:
-            next_y = self.__T1_function(current_y)
-            type_function = "T1"
+        if self.boundary_points['L1']['GR_min'] < current_y < self.boundary_points['L1']['GR_max']:
+            if self.boundary_points['L1']['SK_min'] < current_y < self.boundary_points['L1']['SK_max']:
+                return self.__T1_SK_function(current_y), 'T1_SK'
+            else:
+                return self.__T1_function(current_y), 'T1'
         else:
-            next_y = self.__T2_function(current_y)
-            type_function = "T2"
-        return next_y, type_function
+            return self.__T2_function(current_y)
+    
+    def __T1_SK_function(self, current_y: float) -> float:
+        """
+        Функция T1 в скользящем режиме
+        """
+        pass
+
+    def __T1_function(self, current_y: float) -> float:
+        """
+        Функция T1 через линию L2
+        """
+        pass
+
+    def __T2_function(self, current_y: float) -> tuple[float, str]:
+        """
+        Функция T2 преобразования
+        """
+        if current_y < self.boundary_points['L2']['GR_T2']:
+            # Применяем T2 из L2_-1 -> L3_-1
+            a = -self.g * self.k
+            b = np.sqrt(
+                (self.g * self.k)**2 + current_y**2 + \
+                self.g * (
+                -2 * self.h + 2 * self.k * current_y + 4 * \
+                self.alpha + 4 * self.k * self.beta
+                )
+            )
+            y3 = a - b
+            # Попали в скользящий режим на прямой L3
+            while self.boundary_points['L3']['SK_min'] <= y3 <= self.boundary_points['L3']['SK_max']:
+                y3 = self.__T2_SK_function(y3)
+            # TODO: Добавить расчет преобразования L3_0 -> L4_+1 и L3_-1 -> L4_+1
+            if y3 < self.beta:
+                # Применяем Т2 из L3_0 -> L4_+1
+                pass
+            else:
+                pass
+        else:
+            # Применяем T2 из L2_-1 -> L3_0
+            y3 = -np.sqrt(
+                current_y**2 + 2 * self.g * (
+                self.h - 2 * self.alpha + self.k * (current_y + self.beta)
+                )
+            )
+            # Применяем T2 из L3_0 -> L4_+1
+            a = -self.k * (self.a + self.g)
+            b = np.sqrt(
+                ((self.a + self.g) * self.k)**2 + y3**2 + 2 * \
+                self.a * (self.h + self.k * (y3 + 2 * self.beta)) + \
+                2 * self.g * (self.h + self.k * (y3 + 2 * self.beta))
+            )
+            y4 = a + b
+            # Применяем T2 из L4_+1 -> L1_+1
+            a = -self.g * self.k
+            b = np.sqrt(
+                -2 * self.g * self.h + (self.g * self.k)**2 + 2 * self.g * \
+                self.k * y4 + y4**2 + 4 * self.g * self.alpha
+            )
+            y1 = a + b
+            return y1, "T2"
+        
+    def __T2_SK_function(self, current_y: float) -> float:
+        a = -self.k * (self.a + self.g)
+        b = np.sqrt(
+            (self.a + self.g) * (2 * self.h + (self.a + self.g) * self.k**2) + \
+            2 * (self.a + self.g) * self.k * current_y + current_y**2
+            )
+        y4 = a + b
+        if y4 < self.boundary_points['L4']['GR_T2']:
+            # Применяем L4_-1 -> L3_-1
+            a = -self.g * self.k
+            b = np.sqrt(
+                -2 * self.g * self.h + (self.g * self.k) ** 2 + \
+                2 * self.g * self.k * y4 + y4**2
+            )
+            return a - b
+        else:
+            # Применяем L4_-1 -> L3_0
+            return np.sqrt(
+                -2 * self.g * self.h + y4**2 + 2 * self.g * self.k * (
+                y4 + self.beta
+                )
+            )
