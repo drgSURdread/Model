@@ -3,7 +3,7 @@ import numpy as np
 from analytic_solver import AnalyticSolver
 from object_data import ControlObject
 from sud_data_class import MotionControlSystem
-from lamerey import LamereyDiagram
+from lamerey import LamereyDiagram, NonLinearLamereyDiagram
 
 class EnergyDiagram:
     def __init__(
@@ -52,6 +52,30 @@ class EnergyDiagram:
                 )
             self.__save_results()
 
+    def __solution_used_non_linear_lamerey(self, nu_matrix: list, beta: float) -> None:
+        for param_value in self.value_lst:
+            self.cycles = dict()
+            MotionControlSystem.set_parameter_value(
+                self.channel_name,
+                self.parameter_name,
+                param_value,
+            )
+            for velocity_start in nu_matrix[1]:
+                MotionControlSystem.borehole = 0.0
+                MotionControlSystem.count_impulse = 0
+                MotionControlSystem.period = 0.0
+                # print("Начинаем движение из точки ({}, {})".format(0.0, velocity_start * 180 / np.pi))
+                self.__set_zero_lst_to_control_object(
+                        nu=(0.0, velocity_start)
+                )
+                diagram = NonLinearLamereyDiagram(self.channel_name, beta)
+                diagram.start(velocity_start)
+                self.__save_cycles_parameters(
+                    parameter_value=param_value,
+                    nu=(0.0, velocity_start)
+                )
+            self.__save_results()
+
     def __iterate_solution(self, nu_matrix: list) -> None:
         """
         Перебираем НУ в квадрате со сторонами [angle_min, angle_max] и [velocity_min, velocity_max]
@@ -66,9 +90,9 @@ class EnergyDiagram:
             flag_save = False
             for angle_start in nu_matrix[0]:
                 for velocity_start in nu_matrix[1]:
-                    MotionControlSystem.borehole = 0.0
-                    MotionControlSystem.count_impulse = 0
-                    MotionControlSystem.period = 0.0
+                    # MotionControlSystem.borehole = 0.0
+                    # MotionControlSystem.count_impulse = 0
+                    # MotionControlSystem.period = 0.0
                     # Для каждого НУ инициализируем решатель и решаем, пока не получим цикл
                     print("Начинаем движение из точки ({}, {})".format(angle_start * 180 / np.pi, velocity_start * 180 / np.pi))
                     
@@ -85,10 +109,6 @@ class EnergyDiagram:
                 if flag_save:
                     break
             self.__save_results()
-            # print(
-            #     "Для {} = {}".format(self.parameter_name, param_value), 
-            #     self.results
-            # )
 
     def __set_zero_lst_to_control_object(self, nu: tuple) -> None:
         if self.channel_name == "nu":
@@ -106,7 +126,7 @@ class EnergyDiagram:
     def __save_cycles_parameters(self, parameter_value: float, nu: tuple) -> None:
         self.cycles[nu] = {
             parameter_value: {
-                "type_cycle": "G{}".format(MotionControlSystem.count_impulse),
+                "type_cycle": "Г{}".format(MotionControlSystem.count_impulse),
                 "borehole": MotionControlSystem.borehole,
                 "power": MotionControlSystem.power,
             }
