@@ -168,25 +168,25 @@ class EnergyDiagram:
                 )
         ax.legend(fontsize=14)
 
-        ax = self.__get_figure()
-        plt.xlabel(self.parameter_name, fontsize=14, fontweight="bold")
-        plt.ylabel("Мощность, Вт", fontsize=14, fontweight="bold")
-        for type_cycle in plot_power_data.keys():
-            if len(plot_power_data[type_cycle][0]) == 1:
-                ax.scatter(
-                    plot_power_data[type_cycle][0],
-                    plot_power_data[type_cycle][1],
-                    label=type_cycle,
-                    s=20,
-                )
-            else:
-                ax.plot(
-                    plot_power_data[type_cycle][0],
-                    plot_power_data[type_cycle][1],
-                    label=type_cycle,
-                    linewidth=3,
-                )
-        ax.legend(fontsize=14)
+        # ax = self.__get_figure()
+        # plt.xlabel(self.parameter_name, fontsize=14, fontweight="bold")
+        # plt.ylabel("Мощность, Вт", fontsize=14, fontweight="bold")
+        # for type_cycle in plot_power_data.keys():
+        #     if len(plot_power_data[type_cycle][0]) == 1:
+        #         ax.scatter(
+        #             plot_power_data[type_cycle][0],
+        #             plot_power_data[type_cycle][1],
+        #             label=type_cycle,
+        #             s=20,
+        #         )
+        #     else:
+        #         ax.plot(
+        #             plot_power_data[type_cycle][0],
+        #             plot_power_data[type_cycle][1],
+        #             label=type_cycle,
+        #             linewidth=3,
+        #         )
+        # ax.legend(fontsize=14)
         # plt.show()
 
     def __get_figure(self, figure_size: tuple = (10, 8)) -> plt.Axes:

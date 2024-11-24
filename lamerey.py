@@ -257,6 +257,7 @@ class NonLinearLamereyDiagram(LamereyDiagram):
             "L4": dict()
         }
         self.__calculate_boundary_points()
+        # print(self.boundary_points)
 
     def __calculate_boundary_points(self) -> None:
         self.__calculate_boundary_points_on_line_1()
@@ -327,11 +328,17 @@ class NonLinearLamereyDiagram(LamereyDiagram):
             self.type_function_lst.append(type_function)
             y_start, type_function = self.__next_step(y_start)
     
-        self.__calculate_cycle_characteristics(self.y_values[self.find_index])
+        # self.__calculate_cycle_characteristics(self.y_values[self.find_index])
+        self.__calculate_cycle_characteristics(self.y_values[-1])
     
     def __check_end_solution(self, current_y: float) -> bool:
-        if np.any(np.abs(np.array(self.y_values) - current_y) < 1e-12):
-            self.find_index = np.where(np.abs(np.array(self.y_values) - current_y) < 1e-12)[0][-1]
+        error_value = np.abs((np.array(self.y_values) - current_y) / np.array(self.y_values))
+        # print(error_value)
+        tolerance = 1e-18
+        if np.any(error_value < tolerance):
+            self.find_index = np.where(error_value < tolerance)[0][-1]
+            # print(self.y_values)
+            # print(self.find_index)
             return True
         return False
     
@@ -500,28 +507,32 @@ class NonLinearLamereyDiagram(LamereyDiagram):
 
     def __calculate_curve_characteristic(self, y_start: float, y_end: float, type_curve: str):
         if type_curve == "+":
-            time_curve = (y_start - y_end) / (self.a - self.g)
+            time_curve = abs((y_start - y_end) / (self.a - self.g))
             self.count_impulse += 1
             self.sum_time_impulse += time_curve
             self.sum_power += MotionControlSystem.P_max * time_curve
         elif type_curve == "-":
-            time_curve = (y_end - y_start) / (self.g + self.a)
+            time_curve = abs((y_end - y_start) / (self.g + self.a))
             self.count_impulse += 1
             self.sum_time_impulse += time_curve
             self.sum_power += MotionControlSystem.P_max * time_curve
         else:
-            time_curve = (y_end - y_start) / (self.g)
+            time_curve = abs((y_end - y_start) / (self.g))
             self.sum_power += MotionControlSystem.P_const * time_curve
         self.period += time_curve
+        # if time_curve < 0:
+        #     print(type_curve)
+        #     print(time_curve)
         
-
     def __calculate_cycle_characteristics(self, y_start: float) -> None:
         self.sum_time_impulse = 0.0
         self.period = 0.0
         self.count_impulse = 0
         self.sum_power = 0.0
 
-        self.__next_step(y_start)
+        current_y, type_curve = self.__next_step(y_start)
+        while abs((current_y - y_start) / current_y) > 1e-2:
+            current_y, type_curve = self.__next_step(current_y)
 
         MotionControlSystem.borehole = self.sum_time_impulse / self.period
         MotionControlSystem.period = self.period
