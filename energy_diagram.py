@@ -22,13 +22,13 @@ class EnergyDiagram:
         self.results = dict()
         self.cycles = dict() # Хранит найденные на текущей итерации ПЦ
     
-    def start(self, nu_matrix: np.ndarray, used_lamerey: bool = False) -> None:
+    def start(self, nu_matrix: np.ndarray, used_lamerey: bool = False, beta: float = 0.0) -> None:
         if used_lamerey:
-            self.__solution_used_lamerey(nu_matrix)
+            self.__solution_used_lamerey(nu_matrix, beta)
         else:
             self.__iterate_solution(nu_matrix)
 
-    def __solution_used_lamerey(self, nu_matrix: list) -> None:
+    def __solution_used_lamerey(self, nu_matrix: list, beta: float = 0.0) -> None:
         for param_value in self.value_lst:
             self.cycles = dict()
             MotionControlSystem.set_parameter_value(
@@ -44,31 +44,10 @@ class EnergyDiagram:
                 self.__set_zero_lst_to_control_object(
                         nu=(0.0, velocity_start)
                 )
-                diagram = LamereyDiagram(self.channel_name)
-                count_impulse, cycle_parameters = diagram.start(velocity_start)
-                self.__save_cycles_parameters(
-                    parameter_value=param_value,
-                    nu=(0.0, velocity_start)
-                )
-            self.__save_results()
-
-    def __solution_used_non_linear_lamerey(self, nu_matrix: list, beta: float) -> None:
-        for param_value in self.value_lst:
-            self.cycles = dict()
-            MotionControlSystem.set_parameter_value(
-                self.channel_name,
-                self.parameter_name,
-                param_value,
-            )
-            for velocity_start in nu_matrix[1]:
-                MotionControlSystem.borehole = 0.0
-                MotionControlSystem.count_impulse = 0
-                MotionControlSystem.period = 0.0
-                # print("Начинаем движение из точки ({}, {})".format(0.0, velocity_start * 180 / np.pi))
-                self.__set_zero_lst_to_control_object(
-                        nu=(0.0, velocity_start)
-                )
-                diagram = NonLinearLamereyDiagram(self.channel_name, beta)
+                if beta != 0.0:
+                    diagram = NonLinearLamereyDiagram(self.channel_name, beta)
+                else:
+                    diagram = LamereyDiagram(self.channel_name)
                 diagram.start(velocity_start)
                 self.__save_cycles_parameters(
                     parameter_value=param_value,

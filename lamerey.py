@@ -245,6 +245,11 @@ class NonLinearLamereyDiagram(LamereyDiagram):
         super().__init__(channel_name)
         self.beta = beta
 
+        self.sum_time_impulse = 0.0
+        self.period = 0.0
+        self.count_impulse = 0
+        self.sum_power = 0.0
+
         self.boundary_points = {
             "L1": dict(),
             "L2": dict(),
@@ -322,7 +327,7 @@ class NonLinearLamereyDiagram(LamereyDiagram):
             self.type_function_lst.append(type_function)
             y_start, type_function = self.__next_step(y_start)
     
-        self.__calculate_cycle_characteristics()
+        self.__calculate_cycle_characteristics(self.y_values[self.find_index])
     
     def __check_end_solution(self, current_y: float) -> bool:
         if np.any(np.abs(np.array(self.y_values) - current_y) < 1e-12):
@@ -524,6 +529,7 @@ class NonLinearLamereyDiagram(LamereyDiagram):
         MotionControlSystem.power = self.sum_power / self.period
 
         print("Методом нелинейной диаграммы Ламерея рассчитали следующие параметры ПЦ")
+        print("Количество включений: ", MotionControlSystem.count_impulse)
         print("Скважность: ", MotionControlSystem.borehole)
         print("Период: ", MotionControlSystem.period)
         print("Потребляемая мощность: ", MotionControlSystem.power)

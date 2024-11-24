@@ -109,21 +109,21 @@ def energy_diagram(
         P_const=P_const,
     )
     start_time = time.time()
-    diagram.start(nu_matrix=NU_matrix, used_lamerey=True)
+    diagram.start(nu_matrix=NU_matrix, used_lamerey=True, beta=0.01*np.pi/180)
     print("Общее время построения диаграммы скважности: ", time.time() - start_time)
     diagram.plot_diagram()
 
 if __name__ == "__main__":
-    '''
+
     start("initialization/DATA_REF.xlsx")
-    # print(MotionControlSystem.g)
+    print(MotionControlSystem.g)
     # Параметры для построения энергетической диаграммы
     channel_name = "nu"                  # Название канала
     parameter_name = "g"                 # Название варьируемого параметра
-    value_lst = np.linspace(6e-10, 8e-9, 20)   # Значения варьируемого параметра
+    value_lst = np.linspace(6e-8, 8e-6, 200)   # Значения варьируемого параметра
     NU_matrix = [                        # Набор начальных условий
         np.array([0.0] * 2),
-        np.linspace(3e-8, 1e-5, 4)
+        np.linspace(3e-6, 1e-4, 4)
     ]
     
     # lamerey_diagram(channel_name, NU_matrix[1][1])
@@ -138,16 +138,6 @@ if __name__ == "__main__":
     # ControlObject.nu_w = [0.001]
     # sol = analytic_solution(channel_name, time_solve=20000.0)
     # sol.plot_phase_portrait(channel_name)
-    plt.show()
-    '''
-    start("initialization/DATA_REF.xlsx")
-
-    obj = NonLinearLamereyDiagram("nu", 0.001 * np.pi/180)
-    obj.start(0.01*np.pi/180)
-    # print(obj.boundary_points)
-    print(obj.y_values)
-    print(obj.type_function_lst)
-    obj.plot_diagram()
     plt.show()
 
     
