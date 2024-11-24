@@ -165,10 +165,10 @@ class LamereyDiagram:
         )
     
     def plot_diagram(self, figure_size: tuple = (10, 8)):
-        y_1, y_2 = self.__generate_data_points()
-        points_x, points_y = self.__generate_plot_data(y_1, y_2)
-        borders = self.__get_borders(points_x, points_y)
-        ax = self.__get_figure(figure_size)
+        y_1, y_2 = self.generate_data_points()
+        points_x, points_y = self.generate_plot_data(y_1, y_2)
+        borders = self.get_borders(points_x, points_y)
+        ax = self.get_figure(figure_size)
 
         rad_to_deg = lambda x: x * 180 / np.pi
         
@@ -203,10 +203,10 @@ class LamereyDiagram:
         plt.title("Диаграмма Ламерея")
         # plt.show()
 
-    def __generate_data_points(self):
+    def generate_data_points(self):
         return self.y_values[:len(self.y_values) - 1], self.y_values[1:]
     
-    def __generate_plot_data(self, y_1: list, y_2: list):
+    def generate_plot_data(self, y_1: list, y_2: list):
         plot_line_points_x = [y_1[0]]
         plot_line_points_y = [y_2[0]]
         for i in range(1, len(y_1)):
@@ -218,14 +218,14 @@ class LamereyDiagram:
             plot_line_points_y.append(y_2[i])
         return plot_line_points_x, plot_line_points_y
     
-    def __get_figure(self, figure_size: tuple = (10, 8)) -> plt.Axes:
+    def get_figure(self, figure_size: tuple = (10, 8)) -> plt.Axes:
         fig, ax = plt.subplots(figsize=figure_size, layout="tight")
         ax.grid(True)
         plt.xlabel("Y, град./c", fontsize=14, fontweight="bold")
         plt.ylabel("Y', град./c", fontsize=14, fontweight="bold")
         return ax
     
-    def __get_borders(self, y_1: list, y_2: list) -> dict:
+    def get_borders(self, y_1: list, y_2: list) -> dict:
         return {
             "x":
             {
@@ -483,3 +483,22 @@ class NonLinearLamereyDiagram(LamereyDiagram):
                 y4 + self.beta
                 )
             )
+        
+    def plot_diagram(self, figure_size: tuple = (10, 8)):
+        super().plot_diagram(figure_size)
+        y_values_list = np.linspace(np.min(self.y_values), np.max(self.y_values), 200)
+        function_data = dict()
+        for value in y_values_list:
+            res_point, type_function = self.__next_step(value)
+            if type_function not in function_data.keys():
+                function_data[type_function] = [[], []]
+            function_data[type_function][0].append(value * 180 / np.pi)
+            function_data[type_function][1].append(res_point * 180 / np.pi)
+        for type_function in function_data.keys():
+            plt.plot(
+                function_data[type_function][0],
+                function_data[type_function][1],
+                label=type_function,
+                linewidth=3,
+            )
+        plt.legend(fontsize=14)

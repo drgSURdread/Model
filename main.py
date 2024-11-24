@@ -141,31 +141,7 @@ if __name__ == "__main__":
     plt.show()
     '''
     start("initialization/DATA_REF.xlsx")
-    MotionControlSystem.set_parameter_value(
-        "nu",
-        "alpha",
-        parameter_value=0.1 * np.pi / 180,
-    )
-    MotionControlSystem.set_parameter_value(
-        "nu",
-        "h",
-        parameter_value=0.02 * np.pi / 180,
-    )
-    MotionControlSystem.set_parameter_value(
-        "nu",
-        "k",
-        parameter_value=8.5,
-    )
-    MotionControlSystem.set_parameter_value(
-        "nu",
-        "a",
-        parameter_value=4.543e-5,
-    )
-    MotionControlSystem.set_parameter_value(
-        "nu",
-        "g",
-        parameter_value=3.417e-7,
-    )
+
     obj = NonLinearLamereyDiagram("nu", 0.001 * np.pi/180)
     obj.start(0.01*np.pi/180)
     # print(obj.boundary_points)
