@@ -322,15 +322,21 @@ class NonLinearLamereyDiagram(LamereyDiagram):
             self.type_function_lst.append(type_function)
             y_start, type_function = self.__next_step(y_start)
         
-        sum_count_impulse = 0
-        for type_func in self.type_function_lst[self.find_index:]:
-            sum_count_impulse += int(type_func[1])
+        # sum_count_impulse = 0
+        # for type_func in self.type_function_lst[self.find_index:]:
+        #     sum_count_impulse += int(type_func[1])
         # Иногда дублируются найденные циклы из-за точности
-        if len(self.type_function_lst[self.find_index:]) % 2 == 0:
-            sum_count_impulse //= 2
-        cycle_characteristic = self.__calculate_cycle_characteristics()
+        # if len(self.type_function_lst[self.find_index:]) % 2 == 0:
+        #     sum_count_impulse //= 2
+        # cycle_characteristic = self.__calculate_cycle_characteristics()
         
-        return sum_count_impulse, cycle_characteristic
+        # return sum_count_impulse, cycle_characteristic
+    
+    def __check_end_solution(self, current_y: float) -> bool:
+        if np.any(np.abs(np.array(self.y_values) - current_y) < 1e-12):
+            self.find_index = np.where(np.abs(np.array(self.y_values) - current_y) < 1e-12)[0][-1]
+            return True
+        return False
     
     def __next_step(self, current_y: float) -> tuple:
         if self.boundary_points['L1']['GR_min'] < current_y < self.boundary_points['L1']['GR_max']:
@@ -370,7 +376,7 @@ class NonLinearLamereyDiagram(LamereyDiagram):
             8 * self.a * (self.h - self.k * current_y + 2 * self.k * self.beta) - \
             8 * self.g * (self.h - self.k * current_y + 2 * self.k * self.beta)
         )
-        y2 = a - b
+        y2 = a - 0.5 * b
         a = -self.g * self.k
         b = np.sqrt(
             (self.g * self.k) ** 2 + y2**2 + 2 * self.g * (
@@ -389,7 +395,7 @@ class NonLinearLamereyDiagram(LamereyDiagram):
             8 * self.a * (self.h - self.k * current_y + 2 * self.k * self.beta) - \
             8 * self.g * (self.h - self.k * current_y + 2 * self.k * self.beta)
         )
-        y2 = a - b
+        y2 = a - 0.5 * b
         if y2 < self.boundary_points['L2']['GR_T2']:
             # Применяем T2 из L2_-1 -> L3_-1
             a = -self.g * self.k
@@ -434,8 +440,8 @@ class NonLinearLamereyDiagram(LamereyDiagram):
         else:
             # Применяем T2 из L2_-1 -> L3_0
             y3 = -np.sqrt(
-                current_y**2 + 2 * self.g * (
-                self.h - 2 * self.alpha + self.k * (current_y + self.beta)
+                y2**2 + 2 * self.g * (
+                self.h - 2 * self.alpha + self.k * (y2 + self.beta)
                 )
             )
             # Применяем T2 из L3_0 -> L4_+1
