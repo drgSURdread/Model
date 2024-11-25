@@ -122,10 +122,10 @@ if __name__ == "__main__":
     start("initialization/DATA_REF.xlsx")
     # Параметры для построения энергетической диаграммы
     channel_name = "nu"                  # Название канала
-    # parameter_name = "g"                 # Название варьируемого параметра
-    # value_lst = np.linspace(6e-8, 2e-7, 50)   # Значения варьируемого параметра
-    parameter_name = "k"
-    value_lst = np.linspace(0.1, 18, 320)
+    parameter_name = "g"                 # Название варьируемого параметра
+    value_lst = np.linspace(6e-8, 2e-7, 50)   # Значения варьируемого параметра
+    # parameter_name = "k"
+    # value_lst = np.linspace(0.1, 18, 320)
     NU_matrix = [                        # Набор начальных условий
         np.array([0.0] * 2),
         np.linspace(0.002389*np.pi/180, 0.004389*np.pi/180, 4)

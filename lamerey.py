@@ -257,7 +257,6 @@ class NonLinearLamereyDiagram(LamereyDiagram):
             "L4": dict()
         }
         self.__calculate_boundary_points()
-        # print(self.boundary_points)
 
     def __calculate_boundary_points(self) -> None:
         self.__calculate_boundary_points_on_line_1()
@@ -328,18 +327,13 @@ class NonLinearLamereyDiagram(LamereyDiagram):
             self.type_function_lst.append(type_function)
             y_start, type_function = self.__next_step(y_start)
     
-        # self.__calculate_cycle_characteristics(self.y_values[self.find_index])
         self.__calculate_cycle_characteristics(self.y_values[-1])
     
     def __check_end_solution(self, current_y: float) -> bool:
-        # error_value = np.abs((np.array(self.y_values) - current_y) / np.array(self.y_values))
-        # print(error_value)
         error_value = np.abs((np.array(self.y_values) - current_y))
         tolerance = 1e-12
         if np.any(error_value < tolerance):
             self.find_index = np.where(error_value < tolerance)[0][-1]
-            # print(self.y_values)
-            # print(self.find_index)
             return True
         return False
     
@@ -461,11 +455,6 @@ class NonLinearLamereyDiagram(LamereyDiagram):
             self.__calculate_curve_characteristic(y2, y3, "0")
             # Применяем T2 из L3_0 -> L4_+1
             a = -self.k * (self.a + self.g)
-            # b = np.sqrt(
-            #     ((self.a + self.g) * self.k)**2 + y3**2 + 2 * \
-            #     self.a * (self.h + self.k * (y3 + 2 * self.beta)) + \
-            #     2 * self.g * (self.h + self.k * (y3 + 2 * self.beta))
-            # )
             b = np.sqrt(
                     y3**2 + (self.a + self.g) * (2 * self.h + self.k * (
                     (self.a + self.g) * self.k + 2 * self.beta)
@@ -526,9 +515,6 @@ class NonLinearLamereyDiagram(LamereyDiagram):
             time_curve = abs((y_end - y_start) / (self.g))
             self.sum_power += MotionControlSystem.P_const * time_curve
         self.period += time_curve
-        # if time_curve < 0:
-        #     print(type_curve)
-        #     print(time_curve)
         
     def __calculate_cycle_characteristics(self, y_start: float) -> None:
         self.sum_time_impulse = 0.0
