@@ -245,6 +245,11 @@ class NonLinearLamereyDiagram(LamereyDiagram):
         super().__init__(channel_name)
         self.beta = beta
 
+        self.sum_time_impulse = 0.0
+        self.period = 0.0
+        self.count_impulse = 0
+        self.sum_power = 0.0
+
         self.boundary_points = {
             "L1": dict(),
             "L2": dict(),
@@ -252,6 +257,7 @@ class NonLinearLamereyDiagram(LamereyDiagram):
             "L4": dict()
         }
         self.__calculate_boundary_points()
+        # print(self.boundary_points)
 
     def __calculate_boundary_points(self) -> None:
         self.__calculate_boundary_points_on_line_1()
@@ -321,20 +327,19 @@ class NonLinearLamereyDiagram(LamereyDiagram):
             self.y_values.append(float(y_start))
             self.type_function_lst.append(type_function)
             y_start, type_function = self.__next_step(y_start)
-        
-        # sum_count_impulse = 0
-        # for type_func in self.type_function_lst[self.find_index:]:
-        #     sum_count_impulse += int(type_func[1])
-        # Иногда дублируются найденные циклы из-за точности
-        # if len(self.type_function_lst[self.find_index:]) % 2 == 0:
-        #     sum_count_impulse //= 2
-        # cycle_characteristic = self.__calculate_cycle_characteristics()
-        
-        # return sum_count_impulse, cycle_characteristic
+    
+        # self.__calculate_cycle_characteristics(self.y_values[self.find_index])
+        self.__calculate_cycle_characteristics(self.y_values[-1])
     
     def __check_end_solution(self, current_y: float) -> bool:
-        if np.any(np.abs(np.array(self.y_values) - current_y) < 1e-12):
-            self.find_index = np.where(np.abs(np.array(self.y_values) - current_y) < 1e-12)[0][-1]
+        # error_value = np.abs((np.array(self.y_values) - current_y) / np.array(self.y_values))
+        # print(error_value)
+        error_value = np.abs((np.array(self.y_values) - current_y))
+        tolerance = 1e-12
+        if np.any(error_value < tolerance):
+            self.find_index = np.where(error_value < tolerance)[0][-1]
+            # print(self.y_values)
+            # print(self.find_index)
             return True
         return False
     
@@ -357,13 +362,14 @@ class NonLinearLamereyDiagram(LamereyDiagram):
             2 * (self.g - self.a) * self.k * current_y + current_y**2
         )
         y2 = a - b
+        self.__calculate_curve_characteristic(current_y, y2, "+")
         a = - self.g * self.k
         b = np.sqrt(
             (self.g * self.k) ** 2 + y2**2 + 2 * self.g * (
-            self.h + self.k * y2
-            )
+            self.h + self.k * y2)
         )
         y1 = a + b
+        self.__calculate_curve_characteristic(y2, y1, "0")
         return y1
 
     def __T1_function(self, current_y: float) -> float:
@@ -377,18 +383,21 @@ class NonLinearLamereyDiagram(LamereyDiagram):
             8 * self.g * (self.h - self.k * current_y + 2 * self.k * self.beta)
         )
         y2 = a - 0.5 * b
+        self.__calculate_curve_characteristic(current_y, y2, "+")
         a = -self.g * self.k
         b = np.sqrt(
             (self.g * self.k) ** 2 + y2**2 + 2 * self.g * (
-            self.h + self.k * y2 + 2 * self.k * self.beta
-            )
+            self.h + self.k * y2 + 2 * self.k * self.beta)
         )
-        return a + b
+        y1 = a + b
+        self.__calculate_curve_characteristic(y2, y1, "0")
+        return y1
 
     def __T2_function(self, current_y: float) -> tuple[float, str]:
         """
         Функция T2 преобразования
         """
+        type_curve = 'T2'
         a = self.k * (self.a - self.g)
         b = np.sqrt(
             (2 * self.k * (self.a - self.g))**2 + 4 * current_y**2 + \
@@ -396,28 +405,30 @@ class NonLinearLamereyDiagram(LamereyDiagram):
             8 * self.g * (self.h - self.k * current_y + 2 * self.k * self.beta)
         )
         y2 = a - 0.5 * b
+        self.__calculate_curve_characteristic(current_y, y2, "+")
         if y2 < self.boundary_points['L2']['GR_T2']:
+            type_curve = 'T2_-1_-1'
             # Применяем T2 из L2_-1 -> L3_-1
             a = -self.g * self.k
             b = np.sqrt(
                 (self.g * self.k)**2 + y2**2 + \
                 2 * self.g * (
-                self.h + self.k * y2 + 2 * \
-                self.alpha + 2 * self.k * self.beta
+                self.h + self.k * y2 - 2 * self.alpha
                 )
             )
             y3 = a - b
+            self.__calculate_curve_characteristic(y2, y3, "0")
             # Попали в скользящий режим на прямой L3
             while self.boundary_points['L3']['SK_min'] <= y3 <= self.boundary_points['L3']['SK_max']:
                 y3 = self.__T2_SK_function(y3)
+                type_curve = 'T2_SK'
 
             a = -self.k * (self.a + self.g)
-            if y3 < self.beta:
+            if y3 > -self.beta:
                 # Применяем Т2 из L3_0 -> L4_+1
                 b = np.sqrt(
                     y3**2 + (self.a + self.g) * (2 * self.h + self.k * (
-                    (self.a + self.g) * self.k + 2 * self.beta
-                    )
+                    (self.a + self.g) * self.k + 2 * self.beta)
                     )
                 )
                 y4 = a + b
@@ -429,6 +440,7 @@ class NonLinearLamereyDiagram(LamereyDiagram):
                     (self.h + self.k * (y3 + 2 * self.beta))
                 )
                 y4 = a + b
+            self.__calculate_curve_characteristic(y3, y4, "-")
             # Применяем Т2 из L4_+1 -> L1_+1
             a = -self.g * self.k
             b = np.sqrt(
@@ -436,30 +448,40 @@ class NonLinearLamereyDiagram(LamereyDiagram):
                 2 * self.g * self.k * y4 + y4**2 + 4 * self.g * self.alpha
             )
             y1 = a + b
-            return y1, "T2"
+            self.__calculate_curve_characteristic(y4, y1, "0")
+            return y1, type_curve
         else:
             # Применяем T2 из L2_-1 -> L3_0
+            type_curve = 'T2_-1_0'
             y3 = -np.sqrt(
                 y2**2 + 2 * self.g * (
                 self.h - 2 * self.alpha + self.k * (y2 + self.beta)
                 )
             )
+            self.__calculate_curve_characteristic(y2, y3, "0")
             # Применяем T2 из L3_0 -> L4_+1
             a = -self.k * (self.a + self.g)
+            # b = np.sqrt(
+            #     ((self.a + self.g) * self.k)**2 + y3**2 + 2 * \
+            #     self.a * (self.h + self.k * (y3 + 2 * self.beta)) + \
+            #     2 * self.g * (self.h + self.k * (y3 + 2 * self.beta))
+            # )
             b = np.sqrt(
-                ((self.a + self.g) * self.k)**2 + y3**2 + 2 * \
-                self.a * (self.h + self.k * (y3 + 2 * self.beta)) + \
-                2 * self.g * (self.h + self.k * (y3 + 2 * self.beta))
-            )
+                    y3**2 + (self.a + self.g) * (2 * self.h + self.k * (
+                    (self.a + self.g) * self.k + 2 * self.beta)
+                    )
+                )
             y4 = a + b
+            self.__calculate_curve_characteristic(y3, y4, "-")
             # Применяем T2 из L4_+1 -> L1_+1
             a = -self.g * self.k
             b = np.sqrt(
-                -2 * self.g * self.h + (self.g * self.k)**2 + 2 * self.g * \
-                self.k * y4 + y4**2 + 4 * self.g * self.alpha
+                -2 * self.g * self.h + (self.g * self.k)**2 + \
+                2 * self.g * self.k * y4 + y4**2 + 4 * self.g * self.alpha
             )
             y1 = a + b
-            return y1, "T2"
+            self.__calculate_curve_characteristic(y4, y1, "0")
+            return y1, type_curve
         
     def __T2_SK_function(self, current_y: float) -> float:
         a = -self.k * (self.a + self.g)
@@ -468,22 +490,67 @@ class NonLinearLamereyDiagram(LamereyDiagram):
             2 * (self.a + self.g) * self.k * current_y + current_y**2
             )
         y4 = a + b
-        if y4 < self.boundary_points['L4']['GR_T2']:
+        self.__calculate_curve_characteristic(current_y, y4, "-")
+        if y4 > self.boundary_points['L4']['GR_T2']:
             # Применяем L4_-1 -> L3_-1
             a = -self.g * self.k
             b = np.sqrt(
                 -2 * self.g * self.h + (self.g * self.k) ** 2 + \
                 2 * self.g * self.k * y4 + y4**2
             )
-            return a - b
+            y3 = a - b
+            self.__calculate_curve_characteristic(y4, y3, "0")
+            return y3
         else:
             # Применяем L4_-1 -> L3_0
-            return np.sqrt(
+            y3 = np.sqrt(
                 -2 * self.g * self.h + y4**2 + 2 * self.g * self.k * (
                 y4 + self.beta
                 )
             )
+            self.__calculate_curve_characteristic(y4, y3, "0")
+            return y3
+
+    def __calculate_curve_characteristic(self, y_start: float, y_end: float, type_curve: str):
+        if type_curve == "+":
+            time_curve = abs((y_start - y_end) / (self.a - self.g))
+            self.count_impulse += 1
+            self.sum_time_impulse += time_curve
+            self.sum_power += MotionControlSystem.P_max * time_curve
+        elif type_curve == "-":
+            time_curve = abs((y_end - y_start) / (self.g + self.a))
+            self.count_impulse += 1
+            self.sum_time_impulse += time_curve
+            self.sum_power += MotionControlSystem.P_max * time_curve
+        else:
+            time_curve = abs((y_end - y_start) / (self.g))
+            self.sum_power += MotionControlSystem.P_const * time_curve
+        self.period += time_curve
+        # if time_curve < 0:
+        #     print(type_curve)
+        #     print(time_curve)
         
+    def __calculate_cycle_characteristics(self, y_start: float) -> None:
+        self.sum_time_impulse = 0.0
+        self.period = 0.0
+        self.count_impulse = 0
+        self.sum_power = 0.0
+
+        current_y, type_curve = self.__next_step(y_start)
+        while abs((current_y - y_start) / current_y) > 1e-1:
+            current_y, type_curve = self.__next_step(current_y)
+
+        MotionControlSystem.borehole = self.sum_time_impulse / self.period
+        MotionControlSystem.period = self.period
+        MotionControlSystem.count_impulse = self.count_impulse
+        MotionControlSystem.power = self.sum_power / self.period
+
+        print("Методом нелинейной диаграммы Ламерея рассчитали следующие параметры ПЦ")
+        print("Количество включений: ", MotionControlSystem.count_impulse)
+        print("Скважность: ", MotionControlSystem.borehole)
+        print("Период: ", MotionControlSystem.period)
+        print("Потребляемая мощность: ", MotionControlSystem.power)
+    
     def plot_diagram(self, figure_size: tuple = (10, 8)):
         super().plot_diagram(figure_size)
         y_values_list = np.linspace(np.min(self.y_values), np.max(self.y_values), 200)
