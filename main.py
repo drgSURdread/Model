@@ -125,7 +125,7 @@ if __name__ == "__main__":
     # parameter_name = "g"                 # Название варьируемого параметра
     # value_lst = np.linspace(6e-8, 2e-7, 50)   # Значения варьируемого параметра
     parameter_name = "k"
-    value_lst = np.linspace(0.1, 37, 320)
+    value_lst = np.linspace(0.1, 18, 320)
     NU_matrix = [                        # Набор начальных условий
         np.array([0.0] * 2),
         np.linspace(0.002389*np.pi/180, 0.004389*np.pi/180, 4)
@@ -144,16 +144,16 @@ if __name__ == "__main__":
     # MotionControlSystem.set_parameter_value(
     #     channel_name,
     #     parameter_name,
-    #     parameter_value=15,
+    #     parameter_value=12,
     # )
     # lamerey_diagram(channel_name, 0.0025345365*np.pi/180, beta=0.001389*np.pi/180)
 
-    # print(MotionControlSystem.a)
-    # print(MotionControlSystem.g)
-    # print(MotionControlSystem.alpha * 180 / np.pi)
-    # print(MotionControlSystem.h * 180 / np.pi)
-    # print(MotionControlSystem.k)
-    # print(NU_matrix[1][1] * 180 / np.pi)
+    print(MotionControlSystem.a)
+    print(MotionControlSystem.g)
+    print(MotionControlSystem.alpha * 180 / np.pi)
+    print(MotionControlSystem.h * 180 / np.pi)
+    print(MotionControlSystem.k)
+    print(NU_matrix[1][1] * 180 / np.pi)
     
     plt.show()
 
