@@ -24,7 +24,7 @@ from analytic_solver import AnalyticSolver
 from sud_data_class import MotionControlSystem
 from object_data import ControlObject
 from energy_diagram import EnergyDiagram
-from lamerey import LamereyDiagram
+from lamerey import LamereyDiagram, NonLinearLamereyDiagram
 import time
 from calculate_moments import ComputeMoments
 
@@ -73,7 +73,7 @@ def analytic_solution(channel_name: str = "gamma", time_solve: float = 10.0):
     print("Время выполнения", time.time() - start_time)
     return sol
 
-def lamerey_diagram(channel_name: str, y_start: float) -> None:
+def lamerey_diagram(channel_name: str, y_start: float, beta: float = 0.0) -> None:
     if channel_name == "nu":
         ControlObject.nu_angles = [0.0]
         ControlObject.nu_w = [y_start]
@@ -83,7 +83,10 @@ def lamerey_diagram(channel_name: str, y_start: float) -> None:
     else:
         ControlObject.gamma_angles = [0.0]
         ControlObject.gamma_w = [y_start]
-    diagram = LamereyDiagram(channel_name)
+    if beta == 0.0:
+        diagram = LamereyDiagram(channel_name)
+    else:
+        diagram = NonLinearLamereyDiagram(channel_name, beta)
     diagram.start(y_start)
     diagram.plot_diagram()
 
@@ -93,7 +96,8 @@ def energy_diagram(
         value_lst: list, 
         NU_matrix: list,
         P_max: float = 0.0,
-        P_const: float = 0.0
+        P_const: float = 0.0,
+        beta: float = 0.0,
     ) -> None:
     MotionControlSystem.set_parameter_value(
         channel_name,
@@ -109,35 +113,50 @@ def energy_diagram(
         P_const=P_const,
     )
     start_time = time.time()
-    diagram.start(nu_matrix=NU_matrix, used_lamerey=True)
+    diagram.start(nu_matrix=NU_matrix, used_lamerey=True, beta=beta)
     print("Общее время построения диаграммы скважности: ", time.time() - start_time)
     diagram.plot_diagram()
 
 if __name__ == "__main__":
+
     start("initialization/DATA_REF.xlsx")
-    # print(MotionControlSystem.g)
     # Параметры для построения энергетической диаграммы
     channel_name = "nu"                  # Название канала
-    parameter_name = "g"                 # Название варьируемого параметра
-    value_lst = np.linspace(6e-10, 8e-9, 20)   # Значения варьируемого параметра
+    # parameter_name = "g"                 # Название варьируемого параметра
+    # value_lst = np.linspace(6e-8, 2e-7, 50)   # Значения варьируемого параметра
+    parameter_name = "k"
+    value_lst = np.linspace(0.1, 18, 320)
     NU_matrix = [                        # Набор начальных условий
         np.array([0.0] * 2),
-        np.linspace(3e-8, 1e-5, 4)
+        np.linspace(0.002389*np.pi/180, 0.004389*np.pi/180, 4)
     ]
     
-    # lamerey_diagram(channel_name, NU_matrix[1][1])
-    energy_diagram(channel_name, parameter_name, value_lst, NU_matrix, P_max=15, P_const=3)
+    energy_diagram(
+        channel_name, 
+        parameter_name, 
+        value_lst, 
+        NU_matrix, 
+        P_max=15, 
+        P_const=3, 
+        beta=0.001389*np.pi/180
+    )
 
     # MotionControlSystem.set_parameter_value(
     #     channel_name,
     #     parameter_name,
-    #     parameter_value=value_lst[0],
+    #     parameter_value=12,
     # )
-    # ControlObject.nu_angles = [0.0]
-    # ControlObject.nu_w = [0.001]
-    # sol = analytic_solution(channel_name, time_solve=20000.0)
-    # sol.plot_phase_portrait(channel_name)
+    # lamerey_diagram(channel_name, 0.0025345365*np.pi/180, beta=0.001389*np.pi/180)
+
+    print(MotionControlSystem.a)
+    print(MotionControlSystem.g)
+    print(MotionControlSystem.alpha * 180 / np.pi)
+    print(MotionControlSystem.h * 180 / np.pi)
+    print(MotionControlSystem.k)
+    print(NU_matrix[1][1] * 180 / np.pi)
+    
     plt.show()
+
     
     
     

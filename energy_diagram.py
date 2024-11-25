@@ -3,7 +3,7 @@ import numpy as np
 from analytic_solver import AnalyticSolver
 from object_data import ControlObject
 from sud_data_class import MotionControlSystem
-from lamerey import LamereyDiagram
+from lamerey import LamereyDiagram, NonLinearLamereyDiagram
 
 class EnergyDiagram:
     def __init__(
@@ -22,13 +22,13 @@ class EnergyDiagram:
         self.results = dict()
         self.cycles = dict() # Хранит найденные на текущей итерации ПЦ
     
-    def start(self, nu_matrix: np.ndarray, used_lamerey: bool = False) -> None:
+    def start(self, nu_matrix: np.ndarray, used_lamerey: bool = False, beta: float = 0.0) -> None:
         if used_lamerey:
-            self.__solution_used_lamerey(nu_matrix)
+            self.__solution_used_lamerey(nu_matrix, beta)
         else:
             self.__iterate_solution(nu_matrix)
 
-    def __solution_used_lamerey(self, nu_matrix: list) -> None:
+    def __solution_used_lamerey(self, nu_matrix: list, beta: float = 0.0) -> None:
         for param_value in self.value_lst:
             self.cycles = dict()
             MotionControlSystem.set_parameter_value(
@@ -44,8 +44,11 @@ class EnergyDiagram:
                 self.__set_zero_lst_to_control_object(
                         nu=(0.0, velocity_start)
                 )
-                diagram = LamereyDiagram(self.channel_name)
-                count_impulse, cycle_parameters = diagram.start(velocity_start)
+                if beta != 0.0:
+                    diagram = NonLinearLamereyDiagram(self.channel_name, beta)
+                else:
+                    diagram = LamereyDiagram(self.channel_name)
+                diagram.start(velocity_start)
                 self.__save_cycles_parameters(
                     parameter_value=param_value,
                     nu=(0.0, velocity_start)
@@ -66,9 +69,9 @@ class EnergyDiagram:
             flag_save = False
             for angle_start in nu_matrix[0]:
                 for velocity_start in nu_matrix[1]:
-                    MotionControlSystem.borehole = 0.0
-                    MotionControlSystem.count_impulse = 0
-                    MotionControlSystem.period = 0.0
+                    # MotionControlSystem.borehole = 0.0
+                    # MotionControlSystem.count_impulse = 0
+                    # MotionControlSystem.period = 0.0
                     # Для каждого НУ инициализируем решатель и решаем, пока не получим цикл
                     print("Начинаем движение из точки ({}, {})".format(angle_start * 180 / np.pi, velocity_start * 180 / np.pi))
                     
@@ -85,10 +88,6 @@ class EnergyDiagram:
                 if flag_save:
                     break
             self.__save_results()
-            # print(
-            #     "Для {} = {}".format(self.parameter_name, param_value), 
-            #     self.results
-            # )
 
     def __set_zero_lst_to_control_object(self, nu: tuple) -> None:
         if self.channel_name == "nu":
@@ -106,7 +105,7 @@ class EnergyDiagram:
     def __save_cycles_parameters(self, parameter_value: float, nu: tuple) -> None:
         self.cycles[nu] = {
             parameter_value: {
-                "type_cycle": "G{}".format(MotionControlSystem.count_impulse),
+                "type_cycle": "Г{}".format(MotionControlSystem.count_impulse),
                 "borehole": MotionControlSystem.borehole,
                 "power": MotionControlSystem.power,
             }
@@ -169,25 +168,25 @@ class EnergyDiagram:
                 )
         ax.legend(fontsize=14)
 
-        ax = self.__get_figure()
-        plt.xlabel(self.parameter_name, fontsize=14, fontweight="bold")
-        plt.ylabel("Мощность, Вт", fontsize=14, fontweight="bold")
-        for type_cycle in plot_power_data.keys():
-            if len(plot_power_data[type_cycle][0]) == 1:
-                ax.scatter(
-                    plot_power_data[type_cycle][0],
-                    plot_power_data[type_cycle][1],
-                    label=type_cycle,
-                    s=20,
-                )
-            else:
-                ax.plot(
-                    plot_power_data[type_cycle][0],
-                    plot_power_data[type_cycle][1],
-                    label=type_cycle,
-                    linewidth=3,
-                )
-        ax.legend(fontsize=14)
+        # ax = self.__get_figure()
+        # plt.xlabel(self.parameter_name, fontsize=14, fontweight="bold")
+        # plt.ylabel("Мощность, Вт", fontsize=14, fontweight="bold")
+        # for type_cycle in plot_power_data.keys():
+        #     if len(plot_power_data[type_cycle][0]) == 1:
+        #         ax.scatter(
+        #             plot_power_data[type_cycle][0],
+        #             plot_power_data[type_cycle][1],
+        #             label=type_cycle,
+        #             s=20,
+        #         )
+        #     else:
+        #         ax.plot(
+        #             plot_power_data[type_cycle][0],
+        #             plot_power_data[type_cycle][1],
+        #             label=type_cycle,
+        #             linewidth=3,
+        #         )
+        # ax.legend(fontsize=14)
         # plt.show()
 
     def __get_figure(self, figure_size: tuple = (10, 8)) -> plt.Axes:
