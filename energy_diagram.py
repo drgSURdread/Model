@@ -260,6 +260,45 @@ class EnergyDiagram:
         # ax.legend(fontsize=14)
         # plt.show()
     
+    def plot(self) -> None:
+        data = []
+        data.append(
+            # go.Surface(
+            go.Contour(
+                x=self.plot_data['Г9'][0], 
+                y=self.plot_data['Г9'][1], 
+                z=self.plot_data['Г9'][2],
+                contours=dict(
+                    coloring ='heatmap',
+                    showlabels = True, # show labels on contours
+                    labelfont = dict( # label font properties
+                        size = 12,
+                        color = 'white',
+                    )
+                ),
+                colorbar=dict(nticks=20, ticks='outside',
+                         ticklen=3, tickwidth=3,tickformat='e',
+                         showticklabels=True,
+                         tickangle=0, tickfont_size=12
+                ),
+            )
+        )
+        layout = go.Layout(
+            xaxis={'tickformat':'e'}
+        )
+        fig = go.Figure(data=data, layout=layout)
+        fig.update_xaxes(
+            title_text='Эффективность возмущения, g', 
+            title_font = {"size": 20},
+            nticks=20,
+        )
+        fig.update_yaxes(
+            title_text='Скважность, λ', 
+            title_font = {"size": 20},
+            nticks=20
+        )
+        fig.show() 
+    
     def plot_3d_diagram(self) -> None:
         data = []
         fig = make_subplots(rows=2, cols=2)
