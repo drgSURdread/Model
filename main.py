@@ -137,6 +137,10 @@ def energy_3d_diagram(
     start_time = time.time()
     diagram.start(nu_matrix=NU_matrix, used_lamerey=True, beta=beta, diagram_3d=True)
     print("Общее время построения диаграммы скважности: ", time.time() - start_time)
+    # print('x', diagram.plot_data['Г2'][0])
+    # print('y', diagram.plot_data['Г2'][1])
+    # print('z', len(diagram.plot_data['Г2'][2]))
+    # print('z', len(diagram.plot_data['Г2'][2][0]))
     diagram.plot_3d_diagram()
 
 if __name__ == "__main__":

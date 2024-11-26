@@ -5,6 +5,7 @@ from object_data import ControlObject
 from sud_data_class import MotionControlSystem
 from lamerey import LamereyDiagram, NonLinearLamereyDiagram
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 class EnergyDiagram:
     # TODO: Это не класс, а туториал по тому как не надо писать код
@@ -260,29 +261,79 @@ class EnergyDiagram:
         # plt.show()
     
     def plot_3d_diagram(self) -> None:
-        # plot_data, plot_power_data = self.__generate_plot_data()
-        # ax = self.__get_figure()
-        # plt.xlabel(self.parameter_name, fontsize=14, fontweight="bold")
-        # plt.ylabel("λ", fontsize=14, fontweight="bold")
         data = []
+        fig = make_subplots(rows=2, cols=2)
+        # for type_cycle in self.plot_data.keys():
+        #     if len(self.plot_data[type_cycle][0]) == 1:
+        #         continue # TODO: Пока пропускаем, потом будем отмечать точки на диаграмме
+        #     else:
+        #         data.append(
+        #             # go.Surface(
+        #             go.Contour(
+        #                 x=self.plot_data[type_cycle][0], 
+        #                 y=self.plot_data[type_cycle][1], 
+        #                 z=self.plot_data[type_cycle][2]
+        #             )
+        #         )
+
+        # fig = go.Figure(data=data)
+        # fig.update_traces(contours_z=dict( 
+        #     show=True, usecolormap=True, 
+        #     highlightcolor="limegreen", 
+        #     project_z=True)
+        # ) 
+        # fig.update_layout(
+        #     scene = {
+        #         "xaxis": {"nticks": 20},
+        #         "zaxis": {"nticks": 4},
+        #         'camera_eye': {"x": 0, "y": -1, "z": 0.5},
+        #         "aspectratio": {"x": 1, "y": 1, "z": 0.2}
+        #     })
+        shape = len(list(self.plot_data.keys())) // 2
+        fig = make_subplots(
+            rows=shape, 
+            cols=shape,
+            # column_widths=[1 / shape] * shape,
+            # row_heights=[1 / shape] * shape,
+        )
+        row_cnt = 1
+        col_cnt = 1
         for type_cycle in self.plot_data.keys():
             if len(self.plot_data[type_cycle][0]) == 1:
                 continue # TODO: Пока пропускаем, потом будем отмечать точки на диаграмме
             else:
-                data.append(
-                    go.Surface(
+                fig.add_trace(
+                    # go.Surface(
+                    go.Contour(
                         x=self.plot_data[type_cycle][0], 
                         y=self.plot_data[type_cycle][1], 
-                        z=self.plot_data[type_cycle][2]
-                    )
+                        z=self.plot_data[type_cycle][2],
+                        showscale=False,
+                        colorbar=dict(
+                            thickness=25,
+                            thicknessmode='pixels',
+                            len=0.6,
+                            lenmode='fraction',
+                            outlinewidth=0
+                        ),
+                        contours=dict(
+                            coloring ='heatmap',
+                            showlabels = True, # show labels on contours
+                            labelfont = dict( # label font properties
+                                size = 12,
+                                color = 'white',
+                            )
+                        ),
+                    ),
+                    row=row_cnt,
+                    col=col_cnt,
                 )
-        # ax.legend(fontsize=14)
-        fig = go.Figure(data=data)
-        fig.update_traces(contours_z=dict( 
-            show=True, usecolormap=True, 
-            highlightcolor="limegreen", 
-            project_z=True)
-        ) 
+                if row_cnt == len(list(self.plot_data.keys())) // 2:
+                    col_cnt += 1
+                    row_cnt = 1
+                else:
+                    row_cnt += 1
+        fig.update_layout(height = 1200,width = 3800)
         fig.show() 
 
     def __get_figure(self, figure_size: tuple = (10, 8)) -> plt.Axes:
