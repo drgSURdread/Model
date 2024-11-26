@@ -17,6 +17,7 @@ import sys
 sys.path.append("initialization")
 
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
 import numpy as np
 import initialization.initial_data_class as initial
 from numerical_solver import NumericalSolver
@@ -107,8 +108,8 @@ def energy_diagram(
     
     diagram = EnergyDiagram(
         channel_name=channel_name,
-        parameter_name=parameter_name,
-        value_lst=value_lst,
+        parameter_name_1=parameter_name,
+        value_lst_1=value_lst,
         P_max=P_max,
         P_const=P_const,
     )
@@ -117,27 +118,58 @@ def energy_diagram(
     print("Общее время построения диаграммы скважности: ", time.time() - start_time)
     diagram.plot_diagram()
 
+def energy_3d_diagram(
+        channel_name: str, 
+        parameter_name_1: str, 
+        value_lst_1: list, 
+        parameter_name_2: str, 
+        value_lst_2: list, 
+        NU_matrix: list,
+        beta: float = 0.0,
+    ) -> None:    
+    diagram = EnergyDiagram(
+        channel_name=channel_name,
+        parameter_name_1=parameter_name_1,
+        value_lst_1=value_lst_1,
+        parameter_name_2=parameter_name_2,
+        value_lst_2=value_lst_2,
+    )
+    start_time = time.time()
+    diagram.start(nu_matrix=NU_matrix, used_lamerey=True, beta=beta, diagram_3d=True)
+    print("Общее время построения диаграммы скважности: ", time.time() - start_time)
+    diagram.plot_3d_diagram()
+
 if __name__ == "__main__":
 
     start("initialization/DATA_REF.xlsx")
     # Параметры для построения энергетической диаграммы
     channel_name = "nu"                  # Название канала
-    parameter_name = "g"                 # Название варьируемого параметра
-    value_lst = np.linspace(6e-8, 2e-7, 50)   # Значения варьируемого параметра
-    # parameter_name = "k"
-    # value_lst = np.linspace(0.1, 18, 320)
+    parameter_name_1 = "g"                 # Название варьируемого параметра
+    value_lst_1 = np.linspace(6e-8, 2e-7, 5)   # Значения варьируемого параметра
+    parameter_name_2 = "k"
+    value_lst_2 = np.linspace(0.1, 18, 20)
     NU_matrix = [                        # Набор начальных условий
         np.array([0.0] * 2),
         np.linspace(0.002389*np.pi/180, 0.004389*np.pi/180, 4)
     ]
     
-    energy_diagram(
+    # energy_diagram(
+    #     channel_name, 
+    #     parameter_name, 
+    #     value_lst, 
+    #     NU_matrix, 
+    #     P_max=15, 
+    #     P_const=3, 
+    #     beta=0.001389*np.pi/180
+    # )
+
+    energy_3d_diagram(
         channel_name, 
-        parameter_name, 
-        value_lst, 
-        NU_matrix, 
-        P_max=15, 
-        P_const=3, 
+        parameter_name_1, 
+        value_lst_1, 
+        parameter_name_2, 
+        value_lst_2, 
+        NU_matrix,
         beta=0.001389*np.pi/180
     )
 
@@ -148,14 +180,37 @@ if __name__ == "__main__":
     # )
     # lamerey_diagram(channel_name, 0.0025345365*np.pi/180, beta=0.001389*np.pi/180)
 
-    print(MotionControlSystem.a)
-    print(MotionControlSystem.g)
-    print(MotionControlSystem.alpha * 180 / np.pi)
-    print(MotionControlSystem.h * 180 / np.pi)
-    print(MotionControlSystem.k)
-    print(NU_matrix[1][1] * 180 / np.pi)
+    # print(MotionControlSystem.a)
+    # print(MotionControlSystem.g)
+    # print(MotionControlSystem.alpha * 180 / np.pi)
+    # print(MotionControlSystem.h * 180 / np.pi)
+    # print(MotionControlSystem.k)
+    # print(NU_matrix[1][1] * 180 / np.pi)
     
-    plt.show()
+    # fig = go.Figure(go.Surface(
+    # contours = {
+    #     "x": {"show": True, "start": 1.5, "end": 2, "size": 0.04, "color":"white"},
+    #     "z": {"show": True, "start": 0.5, "end": 0.8, "size": 0.05}
+    # },
+    # x = [1,2,3,4,5],
+    # y = [1,2,3,4,5],
+    # z = [
+    #     [0, 1, 0, 1, 0],
+    #     [1, 0, 1, 0, 1],
+    #     [0, 1, 0, 1, 0],
+    #     [1, 0, 1, 0, 1],
+    #     [0, 1, 0, 1, 0]
+    # ]))
+    # fig.update_layout(
+    #         scene = {
+    #             "xaxis": {"nticks": 20},
+    #             "zaxis": {"nticks": 4},
+    #             'camera_eye': {"x": 0, "y": -1, "z": 0.5},
+    #             "aspectratio": {"x": 1, "y": 1, "z": 0.2}
+    #         })
+    # fig.show()
+
+    # plt.show()
 
     
     

@@ -4,36 +4,49 @@ from analytic_solver import AnalyticSolver
 from object_data import ControlObject
 from sud_data_class import MotionControlSystem
 from lamerey import LamereyDiagram, NonLinearLamereyDiagram
+import plotly.graph_objects as go
 
 class EnergyDiagram:
+    # TODO: Это не класс, а туториал по тому как не надо писать код
     def __init__(
             self, 
             channel_name: str, 
-            parameter_name: str, 
-            value_lst: list,
+            parameter_name_1: str, 
+            value_lst_1: list,
+            parameter_name_2: str = None,
+            value_lst_2: list = None,
             P_max: float = 0.0,
             P_const: float = 0.0):
         self.channel_name = channel_name
-        self.parameter_name = parameter_name
-        self.value_lst = value_lst
+        self.parameter_name_1 = parameter_name_1
+        self.value_lst_1 = value_lst_1
+        self.parameter_name_2 = parameter_name_2
+        self.value_lst_2 = value_lst_2
+
         MotionControlSystem.P_max = P_max
         MotionControlSystem.P_const = P_const
 
         self.results = dict()
+        # self.results_x = dict()
+        # self.results_y = dict()
+        self.plot_data = dict()
         self.cycles = dict() # Хранит найденные на текущей итерации ПЦ
     
-    def start(self, nu_matrix: np.ndarray, used_lamerey: bool = False, beta: float = 0.0) -> None:
+    def start(self, nu_matrix: np.ndarray, used_lamerey: bool = False, beta: float = 0.0, diagram_3d: bool = False) -> None:
         if used_lamerey:
-            self.__solution_used_lamerey(nu_matrix, beta)
+            if diagram_3d:
+                self.__solution_used_3d_lamerey(nu_matrix, beta)
+            else:
+                self.__solution_used_lamerey(nu_matrix, beta)
         else:
             self.__iterate_solution(nu_matrix)
 
     def __solution_used_lamerey(self, nu_matrix: list, beta: float = 0.0) -> None:
-        for param_value in self.value_lst:
+        for param_value in self.value_lst_1:
             self.cycles = dict()
             MotionControlSystem.set_parameter_value(
                 self.channel_name,
-                self.parameter_name,
+                self.parameter_name_1,
                 param_value,
             )
             for velocity_start in nu_matrix[1]:
@@ -54,6 +67,41 @@ class EnergyDiagram:
                     nu=(0.0, velocity_start)
                 )
             self.__save_results()
+
+    def __solution_used_3d_lamerey(self, nu_matrix: list, beta: float = 0.0) -> None:
+        # TODO: Повторение в коде. Поправить
+        for param_value_1 in self.value_lst_1:
+            for param_value_2 in self.value_lst_2:
+                self.cycles = dict()
+                MotionControlSystem.set_parameter_value(
+                    self.channel_name,
+                    self.parameter_name_1,
+                    param_value_1,
+                )
+                MotionControlSystem.set_parameter_value(
+                    self.channel_name,
+                    self.parameter_name_2,
+                    param_value_2,
+                )
+                for velocity_start in nu_matrix[1]:
+                    MotionControlSystem.borehole = 0.0
+                    MotionControlSystem.count_impulse = 0
+                    MotionControlSystem.period = 0.0
+                    print("Начинаем движение из точки ({}, {})".format(0.0, velocity_start * 180 / np.pi))
+                    self.__set_zero_lst_to_control_object(
+                            nu=(0.0, velocity_start)
+                    )
+                    if beta != 0.0:
+                        diagram = NonLinearLamereyDiagram(self.channel_name, beta)
+                    else:
+                        diagram = LamereyDiagram(self.channel_name)
+                    diagram.start(velocity_start)
+                    self.__save_3d_cycles_parameters(
+                        parameter_value_1=param_value_1,
+                        parameter_value_2=param_value_2,
+                        nu=(0.0, velocity_start)
+                    )
+            # self.__save_3d_results()
 
     def __iterate_solution(self, nu_matrix: list) -> None:
         """
@@ -111,6 +159,20 @@ class EnergyDiagram:
             }
         }
 
+    def __save_3d_cycles_parameters(self, parameter_value_1: float, parameter_value_2: float, nu: tuple) -> None:
+        # self.cycles[nu] = {
+        #     (parameter_value_1, parameter_value_2): {
+        #         "type_cycle": "Г{}".format(MotionControlSystem.count_impulse),
+        #         "borehole": MotionControlSystem.borehole,
+        #         "power": MotionControlSystem.power,
+        #     }
+        # }
+        if "Г{}".format(MotionControlSystem.count_impulse) not in self.plot_data.keys():
+            self.plot_data["Г{}".format(MotionControlSystem.count_impulse)] = [[], [], []]
+        self.plot_data["Г{}".format(MotionControlSystem.count_impulse)][0].append(parameter_value_1)
+        self.plot_data["Г{}".format(MotionControlSystem.count_impulse)][1].append(parameter_value_2)
+        self.plot_data["Г{}".format(MotionControlSystem.count_impulse)][2].append(MotionControlSystem.borehole)
+
     def __save_results(self) -> None:
         # FIXME: Переписать это уродство
         for _ in self.cycles.keys(): # Перебираем НУ
@@ -120,7 +182,7 @@ class EnergyDiagram:
                 if self.cycles[_][param_value]["type_cycle"] not in self.results[param_value]:
                     self.results[param_value][self.cycles[_][param_value]["type_cycle"]] = \
                         [self.cycles[_][param_value]["borehole"], self.cycles[_][param_value]["power"]]
-                
+                    
     def __generate_plot_data(self) -> tuple[dict, dict]:
         dict_data = dict()
         power_data = dict()
@@ -188,6 +250,32 @@ class EnergyDiagram:
         #         )
         # ax.legend(fontsize=14)
         # plt.show()
+    
+    def plot_3d_diagram(self) -> None:
+        # plot_data, plot_power_data = self.__generate_plot_data()
+        # ax = self.__get_figure()
+        # plt.xlabel(self.parameter_name, fontsize=14, fontweight="bold")
+        # plt.ylabel("λ", fontsize=14, fontweight="bold")
+        data = []
+        for type_cycle in self.plot_data.keys():
+            if len(self.plot_data[type_cycle][0]) == 1:
+                continue # TODO: Пока пропускаем, потом будем отмечать точки на диаграмме
+            else:
+                data.append(
+                    go.Surface(
+                        x=self.plot_data[type_cycle][0], 
+                        y=self.plot_data[type_cycle][1], 
+                        z=self.plot_data[type_cycle][2]
+                    )
+                )
+        # ax.legend(fontsize=14)
+        fig = go.Figure(data=data)
+        fig.update_traces(contours_z=dict( 
+            show=True, usecolormap=True, 
+            highlightcolor="limegreen", 
+            project_z=True)
+        ) 
+        fig.show() 
 
     def __get_figure(self, figure_size: tuple = (10, 8)) -> plt.Axes:
         """
