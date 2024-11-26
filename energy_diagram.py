@@ -169,9 +169,17 @@ class EnergyDiagram:
         # }
         if "Г{}".format(MotionControlSystem.count_impulse) not in self.plot_data.keys():
             self.plot_data["Г{}".format(MotionControlSystem.count_impulse)] = [[], [], []]
-        self.plot_data["Г{}".format(MotionControlSystem.count_impulse)][0].append(parameter_value_1)
-        self.plot_data["Г{}".format(MotionControlSystem.count_impulse)][1].append(parameter_value_2)
-        self.plot_data["Г{}".format(MotionControlSystem.count_impulse)][2].append(MotionControlSystem.borehole)
+        x_array = self.plot_data["Г{}".format(MotionControlSystem.count_impulse)][0]
+        y_array = self.plot_data["Г{}".format(MotionControlSystem.count_impulse)][1]
+        z_matrix = self.plot_data["Г{}".format(MotionControlSystem.count_impulse)][2]
+
+        if parameter_value_1 not in x_array:
+            x_array.append(parameter_value_1)
+            # Добавляем новую строку в матрицу для Z(x, y)
+            z_matrix.append([])
+        if parameter_value_2 not in y_array:
+            y_array.append(parameter_value_2)
+        z_matrix[x_array.index(parameter_value_1)].append(MotionControlSystem.borehole)
 
     def __save_results(self) -> None:
         # FIXME: Переписать это уродство
