@@ -134,14 +134,13 @@ def energy_3d_diagram(
         parameter_name_2=parameter_name_2,
         value_lst_2=value_lst_2,
     )
-    start_time = time.time()
+    # start_time = time.time()
     diagram.start(nu_matrix=NU_matrix, used_lamerey=True, beta=beta, diagram_3d=True)
-    print("Общее время построения диаграммы скважности: ", time.time() - start_time)
-    # print('x', diagram.plot_data['Г2'][0])
-    # print('y', diagram.plot_data['Г2'][1])
-    # print('z', len(diagram.plot_data['Г2'][2]))
-    # print('z', len(diagram.plot_data['Г2'][2][0]))
-    diagram.plot_3d_diagram()
+    # print("Общее время построения диаграммы скважности: ", time.time() - start_time)
+
+    # diagram.plot_contour('Г3')
+    diagram.plot_3d_diagram('Г3')
+    # diagram.plot_all_surfaces()
 
 if __name__ == "__main__":
 
@@ -149,9 +148,9 @@ if __name__ == "__main__":
     # Параметры для построения энергетической диаграммы
     channel_name = "nu"                  # Название канала
     parameter_name_1 = "g"                 # Название варьируемого параметра
-    value_lst_1 = np.linspace(6e-8, 2e-7, 5)   # Значения варьируемого параметра
+    value_lst_1 = np.linspace(6e-8, 2e-7, 10)   # Значения варьируемого параметра
     parameter_name_2 = "k"
-    value_lst_2 = np.linspace(0.1, 18, 20)
+    value_lst_2 = np.linspace(0.1, 18, 10)
     NU_matrix = [                        # Набор начальных условий
         np.array([0.0] * 2),
         np.linspace(0.002389*np.pi/180, 0.004389*np.pi/180, 4)

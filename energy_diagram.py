@@ -294,20 +294,17 @@ class EnergyDiagram:
     
     def plot_3d_diagram(self, type_cycle: str) -> None:
         data = []
-        # fig = make_subplots(rows=2, cols=2)
-        # for type_cycle in self.plot_data.keys():
-        #     if len(self.plot_data[type_cycle][0]) == 1:
-        #         continue # TODO: Пока пропускаем, потом будем отмечать точки на диаграмме
-        #     else:
         # Задаем цвет поверхности
         surface_color = ['blue'] * len(self.plot_data["Г3"][0]) * len(self.plot_data["Г3"][1])  # Массив одинаковых цветов
 
+        X = self.plot_data[type_cycle][0]
+        Y = self.plot_data[type_cycle][1]
+        Z = self.plot_data[type_cycle][2]
         data.append(
             go.Surface(
-            # go.Contour(
-                x=self.plot_data[type_cycle][0], 
-                y=self.plot_data[type_cycle][1], 
-                z=self.plot_data[type_cycle][2],
+                x=X, 
+                y=Y, 
+                z=Z,
                 # surfacecolor=surface_color,  # Устанавливаем цвет поверхности
                 # showscale=False,         # Отключаем цветовую шкалу
                 # Чтобы сделать colorbar
@@ -319,8 +316,29 @@ class EnergyDiagram:
             )
         )   
         fig = go.Figure(data=data)
+        
+        # Поиск индекса для построения label
+        index = np.where(~np.isnan(Z))
+        x_index = index[0][len(index[0]) // 2]
+        y_index = index[1][len(index[1]) // 2]
+
         fig.update_layout(
             scene=dict(
+                annotations=[
+                    dict(
+                        x=X[x_index],
+                        y=Y[y_index],
+                        z=Z[y_index, x_index],
+                        text=type_cycle,
+                        font=dict(
+                            color="black",
+                            size=16
+                        ),
+                        arrowcolor="black",
+                        arrowsize=1,
+                        arrowwidth=2,
+                        arrowhead=1)
+                ],
                 xaxis=dict(
                     title_text='Эффективность возмущения, g', 
                     title_font = {"size": 20},
