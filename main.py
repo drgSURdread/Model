@@ -1,23 +1,7 @@
-'''
-HELP: В процессе моделирования движения с перекрестными связями
-на фазовых портретах наблюдаются изломы. Есть идеи, что это из-за
-срабатывания реле в других каналах. Впринципе это прдтверждается 
-графиками
-
-HELP: Решения с редуцированной и простой матрицей направляющих
-косинусов дают одинаковые результаты. А разница во времени решения
-около 20 сек
-
-HELP: С текущими настройками решателя наблюдается хорошая точность
-около линий перключения. Текущая скорость симуляции - 
-100 сек. симуляции == 40 сек. решения
-'''
-
 import sys
 sys.path.append("initialization")
 
 import matplotlib.pyplot as plt
-import plotly.graph_objects as go
 import numpy as np
 import initialization.initial_data_class as initial
 from numerical_solver import NumericalSolver
@@ -28,7 +12,6 @@ from energy_diagram import EnergyDiagram
 from lamerey import LamereyDiagram, NonLinearLamereyDiagram
 import time
 from calculate_moments import ComputeMoments
-import json
 
 def start(ref_file_path: str):
     """
@@ -38,16 +21,6 @@ def start(ref_file_path: str):
         ref_file_path (str): путь до `.xlsx` файла
     """
     initial.init_objects(ref_file_path)
-
-def get_moments(channel_name: str):
-    """
-    Возвращает значения гравитационного момента (для отладки)
-    Args:
-        channel_name (str): название канала
-    """
-    index_channel = MotionControlSystem.index_channel_mapping[channel_name]
-    disturbing_moment = ComputeMoments.gravitation_moment(reduced=True)
-    return disturbing_moment[index_channel, 0]
 
 # TODO: Добавить передачу параметров решателя
 def numerical_solution():
@@ -100,13 +73,7 @@ def energy_diagram(
         P_max: float = 0.0,
         P_const: float = 0.0,
         beta: float = 0.0,
-    ) -> None:
-    MotionControlSystem.set_parameter_value(
-        channel_name,
-        parameter_name,
-        parameter_value=value_lst[0],
-    )
-    
+    ) -> None:    
     diagram = EnergyDiagram(
         channel_name=channel_name,
         parameter_name_1=parameter_name,
@@ -127,7 +94,7 @@ def energy_3d_diagram(
         value_lst_2: list, 
         NU_matrix: list,
         beta: float = 0.0,
-    ) -> None:    
+    ) -> EnergyDiagram:    
     diagram = EnergyDiagram(
         channel_name=channel_name,
         parameter_name_1=parameter_name_1,
@@ -139,35 +106,61 @@ def energy_3d_diagram(
     diagram.start(nu_matrix=NU_matrix, used_lamerey=True, beta=beta, diagram_3d=True)
     print("Общее время построения диаграммы скважности: ", time.time() - start_time)
 
-    # diagram.plot_contour('Г3')
-    # diagram.plot_3d_diagram('Г3')
-    diagram.plot_all_surfaces()
+def plot_contour(diagram_obj: EnergyDiagram, type_cycle: str) -> None:
+    diagram_obj.plot_contour(type_cycle)
+
+def plot_3d_diagram(diagram_obj: EnergyDiagram, type_cycle: str) -> None:
+    diagram_obj.plot_3d_diagram(type_cycle)
+
+def plot_all_surfaces(diagram_obj: EnergyDiagram) -> None:
+    diagram_obj.plot_all_surfaces()
 
 if __name__ == "__main__":
+    # Пример использования программы:
 
+    # # 1) Инициализируем систему
+    # #    При желании потом можно изменить какой-нибудь параметр
     start("initialization/DATA_REF.xlsx")
+    
+    # # 2) Построение фазового портрета методом точечных отображения
+    # # В данном случае не учитываются нелинейности
+    sol = analytic_solution(
+        channel_name="nu",
+        time_solve=100.0
+    )
+    sol.plot_phase_portrait("nu") # Отобразить фазовый портрет
+
+    # # 3) Анализ переходного процесса методом диаграммы Ламерея
+    lamerey_diagram(
+        channel_name="nu",
+        y_start=0.01,
+        beta=0.0001, # Если значение равно 0, то зона нечувствительности не будет учитываться
+    )
+
+    # # 4) Построение 2D диаграммы скважности
     # Параметры для построения энергетической диаграммы
-    channel_name = "nu"                  # Название канала
-    parameter_name_1 = "g"                 # Название варьируемого параметра
-    value_lst_1 = np.linspace(1e-7, 2e-7, 100)   # Значения варьируемого параметра
+    channel_name = "nu"                        # Название канала
+    parameter_name_1 = "g"                     # Название варьируемого параметра
+    value_lst_1 = np.linspace(1e-7, 2e-7, 100) # Значения варьируемого параметра
     parameter_name_2 = "k"
     value_lst_2 = np.linspace(10, 18, 100)
-    NU_matrix = [                        # Набор начальных условий
+    NU_matrix = [                        
         np.array([0.0] * 2),
         np.linspace(0.002389*np.pi/180, 0.004389*np.pi/180, 4)
-    ]
-    
-    # energy_diagram(
-    #     channel_name, 
-    #     parameter_name, 
-    #     value_lst, 
-    #     NU_matrix, 
-    #     P_max=15, 
-    #     P_const=3, 
-    #     beta=0.001389*np.pi/180
-    # )
+    ] # Набор начальных условий
 
-    energy_3d_diagram(
+    energy_diagram(
+        channel_name, 
+        parameter_name_1, 
+        value_lst_1, 
+        NU_matrix, 
+        P_max=15, 
+        P_const=3, 
+        beta=0.001389*np.pi/180
+    )
+    
+    # # 5) Построение 3D диаграммы скважности
+    diagram_obj = energy_3d_diagram(
         channel_name, 
         parameter_name_1, 
         value_lst_1, 
@@ -177,21 +170,18 @@ if __name__ == "__main__":
         beta=0.001389*np.pi/180
     )
 
-    # MotionControlSystem.set_parameter_value(
-    #     channel_name,
-    #     parameter_name,
-    #     parameter_value=12,
-    # )
-    # lamerey_diagram(channel_name, 0.0025345365*np.pi/180, beta=0.001389*np.pi/180)
+    plot_3d_diagram(diagram_obj, type_cycle='Г2')
+    plot_all_surfaces(diagram_obj)
+    plot_contour(diagram_obj, type_cycle='Г2')
 
-    # print(MotionControlSystem.a)
-    # print(MotionControlSystem.g)
-    # print(MotionControlSystem.alpha * 180 / np.pi)
-    # print(MotionControlSystem.h * 180 / np.pi)
-    # print(MotionControlSystem.k)
-    # print(NU_matrix[1][1] * 180 / np.pi)
+    # # 6) Для валидации с Model можно вывести параметры СУД следующим образом:
+    print(MotionControlSystem.a)
+    print(MotionControlSystem.g)
+    print(MotionControlSystem.alpha * 180 / np.pi)
+    print(MotionControlSystem.h * 180 / np.pi)
+    print(MotionControlSystem.k)
 
-    # plt.show()
+    plt.show()
 
     
     
