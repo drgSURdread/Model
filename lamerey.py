@@ -25,6 +25,11 @@ class LamereyDiagram:
             MotionControlSystem.index_channel_mapping[self.channel_name]
         ][0]
 
+        self.sum_time_impulse = 0.0
+        self.period = 0.0
+        self.count_impulse = 0
+        self.sum_power = 0.0
+
         # Константы для аналитических уравнений
         self.b = self.a - self.g
         self.d = self.a + self.g
@@ -60,17 +65,18 @@ class LamereyDiagram:
             self.y_values.append(float(y_start))
             self.type_function_lst.append(type_function)
             y_start, type_function = self.__next_step(y_start)
+        self.__calculate_cycle_characteristics(self.y_values[-1])
         
-        sum_count_impulse = 0
-        for type_func in self.type_function_lst[self.find_index:]:
-            sum_count_impulse += int(type_func[1])
-        # Иногда дублируются найденные циклы из-за точности
-        if len(self.type_function_lst[self.find_index:]) % 2 == 0:
-            sum_count_impulse //= 2
-        cycle_characteristic = self.__calculate_cycle_characteristics()
-        
-        return sum_count_impulse, cycle_characteristic
-    
+        # sum_count_impulse = 0
+        # for type_func in self.type_function_lst[self.find_index:]:
+        #     sum_count_impulse += int(type_func[1])
+        # # Иногда дублируются найденные циклы из-за точности
+        # if len(self.type_function_lst[self.find_index:]) % 2 == 0:
+        #     sum_count_impulse //= 2
+        # cycle_characteristic = self.__calculate_cycle_characteristics()
+        # 
+        # return sum_count_impulse, cycle_characteristic
+    """
     def __calculate_cycle_characteristics(self):
         point_x = self.alpha - self.k * self.y_values[-1]
         self.__set_start_point(
@@ -113,6 +119,43 @@ class LamereyDiagram:
             "borehole": MotionControlSystem.borehole,
             "period": MotionControlSystem.period,
         }
+    """
+    def __calculate_cycle_characteristics(self, y_start: float):
+        self.sum_time_impulse = 0.0
+        self.period = 0.0
+        self.count_impulse = 0
+        self.sum_power = 0.0
+
+        current_y, type_curve = self.__next_step(y_start)
+        while abs((current_y - y_start) / current_y) > 1e-1:
+            current_y, type_curve = self.__next_step(current_y)
+
+        MotionControlSystem.borehole = self.sum_time_impulse / self.period
+        MotionControlSystem.period = self.period
+        MotionControlSystem.count_impulse = self.count_impulse
+        MotionControlSystem.power = self.sum_power / self.period
+
+        print("Методом нелинейной диаграммы Ламерея рассчитали следующие параметры ПЦ")
+        print("Количество включений: ", MotionControlSystem.count_impulse)
+        print("Скважность: ", MotionControlSystem.borehole)
+        print("Период: ", MotionControlSystem.period)
+        print("Потребляемая мощность: ", MotionControlSystem.power)
+
+    def __calculate_curve_characteristic(self, y_start: float, y_end: float, type_curve: str):
+        if type_curve == "+":
+            time_curve = abs((y_start - y_end) / (self.a - self.g))
+            self.count_impulse += 1
+            self.sum_time_impulse += time_curve
+            self.sum_power += MotionControlSystem.P_max * time_curve
+        elif type_curve == "-":
+            time_curve = abs((y_end - y_start) / (self.g + self.a))
+            self.count_impulse += 1
+            self.sum_time_impulse += time_curve
+            self.sum_power += MotionControlSystem.P_max * time_curve
+        else:
+            time_curve = abs((y_end - y_start) / (self.g))
+            self.sum_power += MotionControlSystem.P_const * time_curve
+        self.period += time_curve
 
     def __set_start_point(self, start_point: tuple) -> None:
         if self.channel_name == "nu":
@@ -146,23 +189,31 @@ class LamereyDiagram:
                 current_y - self.b * self.k)**2 + \
                 2 * self.b * (self.e1 - self.e2)
             )
-        return -self.g * self.k + np.sqrt(
+        self.__calculate_curve_characteristic(current_y, y2, "+")
+        y1 = -self.g * self.k + np.sqrt(
             (y2 + self.g * self.k)**2 + 2 * self.g * (self.e1 - self.e2)
         )
+        self.__calculate_curve_characteristic(y2, y1, "0")
+        return y1
 
     def __T2_function(self, current_y: float) -> float:
         y2 = self.b * self.k - np.sqrt(
             (current_y - self.b * self.k)**2 + 2 * self.b * (self.e1 - self.e2)
         )
+        self.__calculate_curve_characteristic(current_y, y2, "+")
         y3 = -self.g * self.k - np.sqrt(
             (y2 + self.g * self.k)**2 + 2 * self.g * (self.e3 - self.e2)
         )
+        self.__calculate_curve_characteristic(y2, y3, "0")
         y4 = -self.d * self.k + np.sqrt(
             (y3 + self.d * self.k)**2 + 2 * self.d * (self.e4 - self.e3)
         )
-        return -self.g * self.k + np.sqrt(
+        self.__calculate_curve_characteristic(y3, y4, "-")
+        y1 = -self.g * self.k + np.sqrt(
             (y4 + self.g * self.k)**2 + 2 * self.g * (self.e1 - self.e4)
         )
+        self.__calculate_curve_characteristic(y4, y1, "0")
+        return y1
     
     def plot_diagram(self, figure_size: tuple = (10, 8)):
         y_1, y_2 = self.generate_data_points()

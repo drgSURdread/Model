@@ -210,7 +210,7 @@ class EnergyDiagram:
     def plot_diagram(self, figure_size: tuple = (10, 8)) -> None:
         plot_data, plot_power_data = self.__generate_plot_data()
         ax = self.__get_figure()
-        plt.xlabel(self.parameter_name, fontsize=14, fontweight="bold")
+        plt.xlabel(self.parameter_name_1, fontsize=14, fontweight="bold")
         plt.ylabel("λ", fontsize=14, fontweight="bold")
         for type_cycle in plot_data.keys():
             if len(plot_data[type_cycle][0]) == 1:
