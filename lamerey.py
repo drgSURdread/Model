@@ -66,60 +66,7 @@ class LamereyDiagram:
             self.type_function_lst.append(type_function)
             y_start, type_function = self.__next_step(y_start)
         self.__calculate_cycle_characteristics(self.y_values[-1])
-        
-        # sum_count_impulse = 0
-        # for type_func in self.type_function_lst[self.find_index:]:
-        #     sum_count_impulse += int(type_func[1])
-        # # Иногда дублируются найденные циклы из-за точности
-        # if len(self.type_function_lst[self.find_index:]) % 2 == 0:
-        #     sum_count_impulse //= 2
-        # cycle_characteristic = self.__calculate_cycle_characteristics()
-        # 
-        # return sum_count_impulse, cycle_characteristic
-    """
-    def __calculate_cycle_characteristics(self):
-        point_x = self.alpha - self.k * self.y_values[-1]
-        self.__set_start_point(
-            start_point=(point_x, self.y_values[-1])
-        )
-        sum_time_impulse = 0.0
-        period = 0.0
-        count_impulse = 0
-        sum_power = 0.0
-        sol = AnalyticSolver(self.channel_name, used_lamerey=True)
-        first_true = True # TODO: Исправить этот костыль
-        while abs(
-            ControlObject.get_velocity_value_in_channel(self.channel_name) - self.y_values[-1]
-            ) > 1e-7 or first_true:
-            first_true = False
-            start_time_curve = ControlObject.time_points[-1]
-            sol.solve( # Делаем шаг в виде одной кривой
-                step_solver=True,
-                check_cycle=False,
-                dt_max=0.1,
-            )
-            time_for_curve = ControlObject.time_points[-1] - start_time_curve
-            if sol.phase_plane_obj.current_curve == "G0" or sol.phase_plane_obj.current_curve == "G0":
-                sum_time_impulse += time_for_curve
-                count_impulse += 1
-                sum_power += MotionControlSystem.P_max * time_for_curve
-            else:
-                sum_power += MotionControlSystem.P_const * time_for_curve
-            period += time_for_curve
 
-        MotionControlSystem.borehole = sum_time_impulse / period
-        MotionControlSystem.period = period
-        MotionControlSystem.count_impulse = count_impulse
-        MotionControlSystem.power = sum_power / period
-        print("Методом диаграммы Ламерея рассчитали следующие параметры ПЦ")
-        print("Скважность: ", MotionControlSystem.borehole)
-        print("Период: ", MotionControlSystem.period)
-        print("Потребляемая мощность: ", MotionControlSystem.power)
-        return {
-            "borehole": MotionControlSystem.borehole,
-            "period": MotionControlSystem.period,
-        }
-    """
     def __calculate_cycle_characteristics(self, y_start: float):
         self.sum_time_impulse = 0.0
         self.period = 0.0
@@ -252,7 +199,6 @@ class LamereyDiagram:
         )
 
         plt.title("Диаграмма Ламерея")
-        # plt.show()
 
     def generate_data_points(self):
         return self.y_values[:len(self.y_values) - 1], self.y_values[1:]

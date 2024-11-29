@@ -100,7 +100,6 @@ class EnergyDiagram:
                         parameter_value_2=param_value_2,
                         nu=(0.0, velocity_start)
                     )
-            # self.__save_3d_results()
 
     def __iterate_solution(self, nu_matrix: list) -> None:
         """
@@ -116,9 +115,6 @@ class EnergyDiagram:
             flag_save = False
             for angle_start in nu_matrix[0]:
                 for velocity_start in nu_matrix[1]:
-                    # MotionControlSystem.borehole = 0.0
-                    # MotionControlSystem.count_impulse = 0
-                    # MotionControlSystem.period = 0.0
                     # Для каждого НУ инициализируем решатель и решаем, пока не получим цикл
                     print("Начинаем движение из точки ({}, {})".format(angle_start * 180 / np.pi, velocity_start * 180 / np.pi))
                     
@@ -253,7 +249,6 @@ class EnergyDiagram:
     def plot_contour(self, type_cycle: str) -> None:
         data = []
         data.append(
-            # go.Surface(
             go.Contour(
                 x=self.plot_data[type_cycle][0], 
                 y=self.plot_data[type_cycle][1], 
