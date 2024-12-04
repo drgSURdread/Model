@@ -7,7 +7,7 @@ sys.path.append('dz/phase_portrait/src')
 from object_data import ControlObject
 from sud_data_class import MotionControlSystem
 
-import parser_data as parser_data
+import initialization.parser_data as parser_data
 
 
 def init_control_object(data: pd.DataFrame) -> None:
