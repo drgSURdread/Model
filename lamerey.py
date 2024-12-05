@@ -172,10 +172,10 @@ class LamereyDiagram:
         
         ax.axis(
             [
-                rad_to_deg(borders["x"]["min"]) - 0.3 * borders["x"]["min"],
-                rad_to_deg(borders["x"]["max"]) + 0.1 * borders["x"]["max"],
-                rad_to_deg(borders["y"]["min"]) - 0.3 * borders["y"]["min"],
-                rad_to_deg(borders["y"]["max"]) + 0.1 * borders["y"]["max"]
+                rad_to_deg(borders["x"]["min"]) - 0.5 * borders["x"]["min"],
+                rad_to_deg(borders["x"]["max"]) + 0.5 * borders["x"]["max"],
+                rad_to_deg(borders["y"]["min"]) - 0.5 * borders["y"]["min"],
+                rad_to_deg(borders["y"]["max"]) + 0.5 * borders["y"]["max"]
             ]
         )
 
