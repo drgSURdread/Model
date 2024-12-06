@@ -6,6 +6,13 @@ from main import *
 # Инициализируем систему управления
 start("../initialization/DATA_REF.xlsx")
 # %%
+# Выведем параметры системы управления
+print("a = ", *MotionControlSystem.a)
+print("g = ", *MotionControlSystem.g)
+print("alpha = ", *MotionControlSystem.alpha * 180 / np.pi)
+print("h = ", *MotionControlSystem.h * 180 / np.pi)
+print("k = ", *MotionControlSystem.k)
+# %%
 # Параметры для построения энергетической диаграммы
 channel_name = "nu"                        # Название канала
 parameter_name_1 = "g"                     # Название варьируемого параметра
