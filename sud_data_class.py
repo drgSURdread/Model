@@ -69,15 +69,18 @@ class MotionControlSystem:
     def set_parameter_value(channel_name: str, parameter_name: str, parameter_value) -> None:
         if parameter_name == "k":
             MotionControlSystem.k[
-                MotionControlSystem.index_channel_mapping[channel_name]
+                MotionControlSystem.index_channel_mapping[channel_name],
+                0
             ] = parameter_value
         elif parameter_name == "h":
             MotionControlSystem.h[
-                MotionControlSystem.index_channel_mapping[channel_name]
+                MotionControlSystem.index_channel_mapping[channel_name],
+                0
             ] = parameter_value
         elif parameter_name == "alpha":
             MotionControlSystem.alpha[
-                MotionControlSystem.index_channel_mapping[channel_name]
+                MotionControlSystem.index_channel_mapping[channel_name],
+                0
             ] = parameter_value
         elif parameter_name == "g":
             MotionControlSystem.g[
@@ -86,7 +89,8 @@ class MotionControlSystem:
             ] = parameter_value
         elif parameter_name == "a":
             MotionControlSystem.a[
-                MotionControlSystem.index_channel_mapping[channel_name]
+                MotionControlSystem.index_channel_mapping[channel_name],
+                0
             ] = parameter_value
 
     @staticmethod

@@ -198,6 +198,26 @@ class LamereyDiagram:
             list(map(rad_to_deg, points_y))
         )
 
+        y_values_list = np.linspace(np.min(self.y_values), np.max(self.y_values), 200)
+        plt.plot(
+            y_values_list * 180 / np.pi,
+            self.__T1_function(y_values_list)* 180 / np.pi,
+            label="T1",
+            linewidth=3,
+        )
+        plt.plot(
+            y_values_list * 180 / np.pi,
+            self.__T2_function(y_values_list)* 180 / np.pi,
+            label="T2",
+            linewidth=3,
+        )
+
+        ax.plot([self.y_min_bound_point * 180 / np.pi] * 2, [0, self.y_min_bound_point * 180 / np.pi])
+        ax.plot([(self.h / (2 * self.k) - self.g * self.k) * 180 / np.pi] * 2, 
+                [0, (self.h / (2 * self.k) - self.g * self.k) * 180 / np.pi])
+        ax.plot([(self.h / (2 * self.k) + self.g * self.k) * 180 / np.pi] * 2, 
+                [0, (self.h / (2 * self.k) + self.g * self.k) * 180 / np.pi])
+
         plt.title("Диаграмма Ламерея")
 
     def generate_data_points(self):

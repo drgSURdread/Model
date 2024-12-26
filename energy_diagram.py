@@ -30,6 +30,10 @@ class EnergyDiagram:
         self.results = dict()
         self.plot_data = dict()
         self.cycles = dict() # Хранит найденные на текущей итерации ПЦ
+
+        self.bif_results = dict()
+        self.bifurcation_values = []
+        self.plot_bif_values = False
     
     def start(self, nu_matrix: np.ndarray, used_lamerey: bool = False, beta: float = 0.0, diagram_3d: bool = False) -> None:
         if used_lamerey:
@@ -65,7 +69,10 @@ class EnergyDiagram:
                     parameter_value=param_value,
                     nu=(0.0, velocity_start)
                 )
-            self.__save_results()
+            if self.plot_bif_values:
+                self.__save_bif_values()
+            else:
+                self.__save_results()
 
     def __solution_used_3d_lamerey(self, nu_matrix: list, beta: float = 0.0) -> None:
         # TODO: Повторение в коде. Поправить
@@ -167,7 +174,6 @@ class EnergyDiagram:
 
         z_matrix[x_array.index(parameter_value_1), y_array.index(parameter_value_2)] = (MotionControlSystem.borehole)
         
-
     def __save_results(self) -> None:
         # FIXME: Переписать это уродство
         for _ in self.cycles.keys(): # Перебираем НУ
@@ -178,6 +184,15 @@ class EnergyDiagram:
                     self.results[param_value][self.cycles[_][param_value]["type_cycle"]] = \
                         [self.cycles[_][param_value]["borehole"], self.cycles[_][param_value]["power"]]
                     
+    def __save_bif_values(self) -> None:
+        for _ in self.cycles.keys(): # Перебираем НУ
+            for param_value in self.cycles[_].keys(): # Перебираем данные полученных циклов
+                if param_value not in self.bif_results:
+                    self.bif_results[param_value] = dict()
+                if self.cycles[_][param_value]["type_cycle"] not in self.bif_results[param_value]:
+                    self.bif_results[param_value][self.cycles[_][param_value]["type_cycle"]] = \
+                        [self.cycles[_][param_value]["borehole"], self.cycles[_][param_value]["power"]]
+    
     def __generate_plot_data(self) -> tuple[dict, dict]:
         dict_data = dict()
         power_data = dict()
@@ -202,9 +217,36 @@ class EnergyDiagram:
                 plot_power_data[type_cycle][0].append(point[0])
                 plot_power_data[type_cycle][1].append(point[1])
         return plot_data, plot_power_data
+    
+    def __generate_bif_plot_data(self) -> tuple[dict, dict]:
+        dict_data = dict()
+        power_data = dict()
+        for param_value in self.bif_results: # Проходим по всем значениям варьируемого параметра
+            cycles = self.bif_results[param_value]
+            for type_cycle in cycles.keys(): # Проходим по всем найденным циклам
+                if type_cycle not in dict_data:
+                    dict_data[type_cycle] = []
+                    power_data[type_cycle] = []
+                dict_data[type_cycle].append((param_value, cycles[type_cycle][0])) # Сохраняем скважность
+                power_data[type_cycle].append((param_value, cycles[type_cycle][1])) # Сохраняем мощность
+
+        plot_data = dict()
+        plot_power_data = dict()
+        for type_cycle in dict_data.keys():
+            plot_data[type_cycle] = [[], []]
+            plot_power_data[type_cycle] = [[], []]
+            for point in dict_data[type_cycle]:
+                plot_data[type_cycle][0].append(point[0])
+                plot_data[type_cycle][1].append(point[1])
+            for point in power_data[type_cycle]:
+                plot_power_data[type_cycle][0].append(point[0])
+                plot_power_data[type_cycle][1].append(point[1])
+        return plot_data, plot_power_data
 
     def plot_diagram(self, figure_size: tuple = (10, 8)) -> None:
         plot_data, plot_power_data = self.__generate_plot_data()
+        if self.plot_bif_values:
+            plot_bif_data, plot_bif_power_data = self.__generate_bif_plot_data()
         ax = self.__get_figure()
         plt.xlabel(self.parameter_name_1, fontsize=14, fontweight="bold")
         plt.ylabel("λ", fontsize=14, fontweight="bold")
@@ -223,6 +265,15 @@ class EnergyDiagram:
                     label=type_cycle,
                     linewidth=3,
                 )
+        if self.plot_bif_values:
+            for type_cycle in plot_bif_data.keys():
+                ax.scatter(
+                    plot_bif_data[type_cycle][0],
+                    plot_bif_data[type_cycle][1],
+                    color='b',
+                    s=20,
+                )
+        
         ax.legend(fontsize=14)
 
         # ax = self.__get_figure()
